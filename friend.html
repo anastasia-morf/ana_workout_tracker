@@ -212,10 +212,42 @@
 </div>
 
 <script>
-// ── CLOUD CONFIG — fill these in after JSONBin setup ──────────
-const BIN_ID  = '6a09de22adc21f119ab39fdc';
-const API_KEY = 'https://api.jsonbin.io/v3/b/6a09de22adc21f119ab39fdc';
+// ── CLOUD CONFIG — paste your Firebase database URL here ──────
+const DB_URL = 'FILL_IN_YOUR_FIREBASE_URL';
+// e.g. https://ana-workout-default-rtdb.firebaseio.com
+// No API key needed — just the URL!
 // ─────────────────────────────────────────────────────────────
+
+// ── SHARE TODAY ────────────────────────────────────────────────
+function shareToday(){
+  const d=dd(viewDay), wo=W[viewDay];
+  const payload={
+    dow:viewDay,
+    date:new Date().toISOString().slice(0,10),
+    exercises:d.exercises||{},
+    correctives:d.correctives||{},
+    items:d.items||{},
+    protein:d.protein||'',
+    steps:d.steps||'',
+    water:d.water||'',
+    sleep:d.sleep||'',
+    notes:d.notes||'',
+    progress:prog.slice(-5),
+    milestones:miles,
+  };
+  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const friendUrl=location.href.replace(/[^\/]*$/,'')+('friend.html#'+encoded);
+  const btn=document.getElementById('share-btn');
+  if(navigator.share){
+    navigator.share({title:"Ana's workout today 🌸",url:friendUrl}).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(friendUrl).then(()=>{
+      if(btn){btn.textContent='Link copied! 🌷';setTimeout(()=>btn.textContent='Share today 🌸',2500);}
+    }).catch(()=>{
+      if(btn){btn.textContent=friendUrl;btn.style.fontSize='10px';}
+    });
+  }
+}
 
 const W = {
   1:{name:'Monday',title:'Lower Body',emoji:'🍑',color:'#e8a0b4',corr:true,sections:[
@@ -395,7 +427,8 @@ function renderToday(){
       <div class="prog-track"><div class="prog-fill" id="pfill" style="width:${pct}%"></div></div>
     </div>`:''}
   </div>
-  <div class="flower-strip">🌸 🌷 🌼 🌸 🌷 🌼</div>`;
+  <div class="flower-strip">🌸 🌷 🌼 🌸 🌷 🌼</div>
+  <button id="share-btn" onclick="shareToday()" style="-webkit-appearance:none;appearance:none;width:100%;border:none;border-radius:14px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:700;padding:11px;cursor:pointer;margin-bottom:4px;letter-spacing:0.3px;font-family:inherit;">Share today 🌸</button>`;
 
   if(wo.rest){
     h+=`<div class="card rest-card"><span class="rest-emoji">🐰</span>
@@ -661,7 +694,11 @@ const PIN='4444';
 let pinEntry='';
 function updatePinDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i)?.classList.toggle('filled',i<pinEntry.length);}
 function pinShake(){const d=document.getElementById('pin-dots');if(d){d.classList.add('shake');setTimeout(()=>d.classList.remove('shake'),400);}}
-function unlockApp(){document.getElementById('pin-screen')?.classList.add('hidden');sessionStorage.setItem('wt_unlocked','1');loadAll();renderAll();}
+function unlockApp(){
+  document.getElementById('pin-screen')?.classList.add('hidden');
+  sessionStorage.setItem('wt_unlocked','1');
+  loadAll(); renderAll();
+}
 
 document.getElementById('pin-screen').addEventListener('click',e=>{
   const key=e.target.closest('[data-k]');
