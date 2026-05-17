@@ -212,6 +212,11 @@
 </div>
 
 <script>
+// ── CLOUD CONFIG — fill these in after JSONBin setup ──────────
+const BIN_ID  = '6a09de22adc21f119ab39fdc';
+const API_KEY = 'https://api.jsonbin.io/v3/b/6a09de22adc21f119ab39fdc';
+// ─────────────────────────────────────────────────────────────
+
 const W = {
   1:{name:'Monday',title:'Lower Body',emoji:'🍑',color:'#e8a0b4',corr:true,sections:[
     {label:'Main Lifts',exercises:[
@@ -304,9 +309,9 @@ function loadAll(){
   try{prog=JSON.parse(localStorage.getItem('wt_prog')||'[]');}catch{prog=[];}
   try{miles=JSON.parse(localStorage.getItem('wt_ms')||'{}');}catch{miles={};}
 }
-function saveWk(){localStorage.setItem('wt_wk_'+WK,JSON.stringify(wkData));}
-function saveProg(){localStorage.setItem('wt_prog',JSON.stringify(prog));}
-function saveMs(){localStorage.setItem('wt_ms',JSON.stringify(miles));}
+function saveWk(){localStorage.setItem('wt_wk_'+WK,JSON.stringify(wkData));queueSync();}
+function saveProg(){localStorage.setItem('wt_prog',JSON.stringify(prog));queueSync();}
+function saveMs(){localStorage.setItem('wt_ms',JSON.stringify(miles));queueSync();}
 function dd(dow){const k=DK[dow];if(!wkData[k])wkData[k]={};return wkData[k];}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmtD(iso){return new Date(iso+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});}
@@ -656,7 +661,12 @@ const PIN='4444';
 let pinEntry='';
 function updatePinDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i)?.classList.toggle('filled',i<pinEntry.length);}
 function pinShake(){const d=document.getElementById('pin-dots');if(d){d.classList.add('shake');setTimeout(()=>d.classList.remove('shake'),400);}}
-function unlockApp(){document.getElementById('pin-screen')?.classList.add('hidden');sessionStorage.setItem('wt_unlocked','1');loadAll();renderAll();}
+function unlockApp(){
+  document.getElementById('pin-screen')?.classList.add('hidden');
+  sessionStorage.setItem('wt_unlocked','1');
+  loadAll();
+  loadFromCloud().then(()=>{loadAll();renderAll();});
+}
 
 document.getElementById('pin-screen').addEventListener('click',e=>{
   const key=e.target.closest('[data-k]');
@@ -673,6 +683,47 @@ document.getElementById('pin-screen').addEventListener('click',e=>{
   }
   if(e.target.id==='pin-del'){pinEntry=pinEntry.slice(0,-1);updatePinDots();}
 });
+
+// ── CLOUD SYNC ─────────────────────────────────────────────────
+const CLOUD_OK = ()=>BIN_ID && BIN_ID!=='6a09de22adc21f119ab39fdc';
+
+async function syncToCloud(){
+  if(!CLOUD_OK())return;
+  try{
+    // Build unified payload
+    const weeks={};
+    Object.keys(localStorage).filter(k=>k.startsWith('wt_wk_')).forEach(k=>{
+      try{ weeks[k.replace('wt_wk_','')]=JSON.parse(localStorage.getItem(k)); }catch{}
+    });
+    // Preserve existing comments from cloud
+    let comments=[];
+    try{
+      const r=await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{headers:{'X-Master-Key':API_KEY,'X-Bin-Meta':'false'}});
+      if(r.ok){const d=await r.json(); comments=d.comments||[];}
+    }catch{}
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},
+      body:JSON.stringify({weeks,progress:prog,milestones:miles,comments})
+    });
+  }catch(e){console.log('Sync failed:',e);}
+}
+
+let _syncTimer=null;
+function queueSync(){clearTimeout(_syncTimer);_syncTimer=setTimeout(syncToCloud,3000);}
+
+async function loadFromCloud(){
+  if(!CLOUD_OK())return;
+  try{
+    const r=await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{headers:{'X-Master-Key':API_KEY,'X-Bin-Meta':'false'}});
+    if(!r.ok)return;
+    const d=await r.json();
+    // Merge cloud weeks into localStorage
+    if(d.weeks){Object.entries(d.weeks).forEach(([k,v])=>localStorage.setItem('wt_wk_'+k,JSON.stringify(v)));}
+    if(d.progress){prog=d.progress;localStorage.setItem('wt_prog',JSON.stringify(prog));}
+    if(d.milestones){miles=d.milestones;localStorage.setItem('wt_ms',JSON.stringify(miles));}
+  }catch(e){console.log('Cloud load failed:',e);}
+}
 
 // ── RENDER + INIT ──────────────────────────────────────────────
 function renderAll(){renderHeader();renderNav();({today:renderToday,week:renderWeek,progress:renderProgress})[tab]?.();document.getElementById('content').scrollTop=0;}
