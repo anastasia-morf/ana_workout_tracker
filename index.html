@@ -145,6 +145,17 @@
     .ms-date { font-size: 11px; color: var(--accent); margin-top: 2px; font-weight: 600; }
     .empty { text-align: center; color: var(--soft); font-size: 14px; padding: 24px 0; line-height: 1.8; }
 
+    /* Day navigator */
+    .day-nav-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; margin-bottom: 4px; }
+    .day-nav-arr { -webkit-appearance: none; appearance: none; border: none; background: var(--card); border-radius: 14px; width: 40px; height: 40px; font-size: 20px; color: var(--accent); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(232,121,154,0.15); font-weight: 700; transition: transform 0.1s; }
+    .day-nav-arr:active { transform: scale(0.88); background: var(--accent-soft); }
+    .day-nav-center { flex: 1; text-align: center; }
+    .day-nav-name { font-family: Georgia, serif; font-size: 17px; font-weight: 700; color: var(--ink); }
+    .day-nav-badge { display: inline-block; font-size: 10px; background: var(--accent); color: #fff; border-radius: 20px; padding: 2px 8px; margin-left: 6px; font-weight: 700; letter-spacing: 0.5px; vertical-align: middle; }
+    .day-dots { display: flex; justify-content: center; gap: 5px; margin-bottom: 2px; }
+    .day-dot { width: 6px; height: 6px; border-radius: 3px; background: var(--line); transition: all 0.2s; }
+    .day-dot.active { width: 18px; background: var(--accent); }
+
     /* PIN SCREEN */
     #pin-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; }
     #pin-screen.hidden { display: none; }
@@ -354,26 +365,26 @@ function renderToday(){
   const pct=allEx.length?Math.round(doneEx/allEx.length*100):0;
   const isToday=viewDay===DOW;
 
-  // Day navigator
+  // Day navigator — clean arrow style
   const prevDay=DORD[(DORD.indexOf(viewDay)+6)%7];
   const nextDay=DORD[(DORD.indexOf(viewDay)+1)%7];
-  let h=`<div style="display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:2px;">
-    <button class="day-nav-btn" data-daynav="${prevDay}">‹</button>
-    <div style="flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0;">`;
-  DORD.forEach(dow=>{
-    const isV=dow===viewDay, isT=dow===DOW, wo2=W[dow];
-    const dk=DK[dow], dd2=wkData[dk]||{};
-    const has=dd2.exercises||dd2.items||dd2.correctives||dd2.protein;
-    h+=`<button class="day-chip ${isV?'day-chip-active':''}" data-daynav="${dow}" style="${isV?'background:'+wo2.color+';color:#fff;':has?'background:'+wo2.color+'22;':''}">
-      ${isT&&!isV?'📍 ':''}<span style="font-size:11px;font-weight:700;">${DS[dow]}</span>
-    </button>`;
-  });
-  h+=`</div><button class="day-nav-btn" data-daynav="${nextDay}">›</button></div>`;
+  const isToday=viewDay===DOW;
+
+  let h=`<div class="day-nav-row">
+    <button class="day-nav-arr" data-daynav="${prevDay}">‹</button>
+    <div class="day-nav-center">
+      <div class="day-nav-name">${wo.name}${isToday?'<span class="day-nav-badge">Today</span>':''}</div>
+    </div>
+    <button class="day-nav-arr" data-daynav="${nextDay}">›</button>
+  </div>
+  <div class="day-dots">
+    ${DORD.map(d=>`<div class="day-dot ${d===viewDay?'active':''}"></div>`).join('')}
+  </div>`;
 
   h+=`<div class="card card-hero" style="background:${wo.color};">
     <div class="emoji-bg">${wo.emoji}</div>
     <div class="hero-deco">✿ ❀ ✿</div>
-    <div class="hero-day">${isToday?'Today — ':''} ${wo.name}</div>
+    <div class="hero-day">${wo.name}</div>
     <div class="hero-title">${wo.title}</div>
     ${allEx.length?`<div class="prog-wrap">
       <div class="prog-labels"><span id="plbl">${doneEx}/${allEx.length} done</span><span id="ppct">${pct}%</span></div>
@@ -592,9 +603,13 @@ function renderProgress(){
 
 // ── CONTENT EVENTS ─────────────────────────────────────────────
 document.getElementById('content').addEventListener('click',e=>{
+  // Day nav (today tab)
+  const navEl=e.target.closest('[data-daynav]');
+  if(navEl){viewDay=parseInt(navEl.dataset.daynav);renderHeader();renderToday();return;}
+
   const cEl=e.target.closest('[data-corrid]');
   if(cEl){
-    const d2=dd(DOW); if(!d2.correctives)d2.correctives={};
+    const d2=dd(viewDay); if(!d2.correctives)d2.correctives={};
     d2.correctives[cEl.dataset.corrid]=!d2.correctives[cEl.dataset.corrid]; saveWk();
     cEl.classList.toggle('checked',!!d2.correctives[cEl.dataset.corrid]);
     const allDone=CORR.every(c=>d2.correctives?.[c.id]);
@@ -606,14 +621,14 @@ document.getElementById('content').addEventListener('click',e=>{
   }
   const xEl=e.target.closest('[data-exid]');
   if(xEl){
-    const d2=dd(DOW); if(!d2.exercises)d2.exercises={};
+    const d2=dd(viewDay); if(!d2.exercises)d2.exercises={};
     const id=xEl.dataset.exid; if(!d2.exercises[id])d2.exercises[id]={};
     d2.exercises[id].done=!d2.exercises[id].done; saveWk();
     xEl.classList.toggle('checked',!!d2.exercises[id].done); updateProgBar(); return;
   }
   const lEl=e.target.closest('[data-light]');
   if(lEl){
-    const d2=dd(DOW); if(!d2.items)d2.items={};
+    const d2=dd(viewDay); if(!d2.items)d2.items={};
     d2.items[lEl.dataset.light]=!d2.items[lEl.dataset.light]; saveWk();
     lEl.classList.toggle('checked',!!d2.items[lEl.dataset.light]); return;
   }
