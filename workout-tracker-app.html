@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Workout">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Workout Tracker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --bg: #faf9f6; --card: #ffffff; --ink: #1a1a1a; --soft: #9b8e7e;
+      --line: #f0ede6; --accent: #c4a882; --accent-soft: #f0e8dd;
+      --red: #c47878; --green: #6aab7e;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: system-ui,-apple-system,sans-serif; overscroll-behavior: none; }
+    #app { display: flex; flex-direction: column; height: 100dvh; max-width: 430px; margin: 0 auto; }
+    #header { flex-shrink: 0; padding: 52px 20px 12px; background: var(--bg); }
+    #content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 24px; }
+    #nav { flex-shrink: 0; display: flex; background: #fff; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+
+    .h-title { font-family: Georgia, serif; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .h-sub { font-size: 13px; color: var(--soft); font-style: italic; margin-top: 2px; }
+
+    .nav-btn { flex: 1; border: none; background: transparent; padding: 10px 0 12px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+    .nav-icon { font-size: 22px; }
+    .nav-label { font-size: 10px; letter-spacing: 0.5px; font-weight: 500; color: var(--soft); }
+    .nav-btn.active .nav-label { color: var(--accent); }
+    .nav-dot { width: 4px; height: 4px; border-radius: 2px; background: var(--accent); opacity: 0; }
+    .nav-btn.active .nav-dot { opacity: 1; }
+
+    .card { background: var(--card); border-radius: 16px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card-hero { padding: 18px; position: relative; overflow: hidden; color: #fff; margin-top: 12px; }
+    .emoji-bg { position: absolute; right: 14px; top: 14px; font-size: 48px; opacity: 0.25; pointer-events: none; }
+    .hero-day { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.85; font-weight: 600; }
+    .hero-title { font-family: Georgia, serif; font-size: 28px; font-weight: 700; margin-top: 2px; letter-spacing: -0.5px; }
+    .prog-wrap { margin-top: 14px; }
+    .prog-labels { display: flex; justify-content: space-between; font-size: 11px; opacity: 0.9; margin-bottom: 6px; }
+    .prog-track { background: rgba(255,255,255,0.3); border-radius: 3px; height: 4px; }
+    .prog-fill { background: #fff; border-radius: 3px; height: 4px; transition: width 0.3s ease; }
+
+    .sec-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 14px 0 6px; }
+
+    .ex-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .ex-row:last-child { border-bottom: none; }
+    .ex-info { flex: 1; min-width: 0; }
+    .ex-name { font-size: 14px; }
+    .ex-sets { font-size: 11px; color: var(--soft); margin-top: 1px; }
+
+    .cb { width: 24px; height: 24px; border-radius: 7px; border: 2px solid #ddd; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; user-select: none; }
+    .cb.checked { background: var(--accent); border-color: var(--accent); }
+    .cb-icon { font-size: 13px; color: #fff; display: none; }
+    .cb.checked .cb-icon { display: block; }
+
+    .w-input { width: 58px; border: none; border-bottom: 1.5px solid var(--line); background: transparent; font-size: 14px; text-align: center; color: var(--ink); outline: none; padding: 2px 0; font-family: inherit; }
+    .w-input:focus { border-bottom-color: var(--accent); }
+    .w-label { font-size: 10px; color: var(--soft); text-align: center; margin-top: 2px; }
+
+    .hgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .hbox { background: #f7f5f1; border-radius: 12px; padding: 10px 12px; }
+    .hbox-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--soft); font-weight: 600; display: block; margin-bottom: 5px; }
+    .h-input { width: 100%; border: none; border-bottom: 1.5px solid var(--line); background: transparent; font-size: 18px; font-weight: 600; color: var(--ink); outline: none; padding: 2px 0; font-family: inherit; }
+    .h-input:focus { border-bottom-color: var(--accent); }
+
+    .notes-area { width: 100%; border: none; background: transparent; font-size: 14px; font-family: inherit; color: var(--ink); resize: none; outline: none; min-height: 60px; line-height: 1.6; }
+
+    .tag { display: inline-block; font-size: 10px; background: var(--line); color: var(--soft); border-radius: 20px; padding: 3px 9px; letter-spacing: 0.5px; font-weight: 600; }
+    .tag.done { background: var(--accent); color: #fff; }
+
+    .rest-card { text-align: center; padding: 48px 20px; }
+    .rest-emoji { font-size: 56px; display: block; margin-bottom: 14px; }
+    .rest-title { font-family: Georgia, serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .rest-text { font-size: 14px; color: var(--soft); line-height: 1.7; }
+
+    /* Week tab */
+    .week-strip { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 4px 0 8px; }
+    .week-strip::-webkit-scrollbar { display: none; }
+    .day-pill { flex-shrink: 0; width: 44px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .dp-label { font-size: 10px; color: var(--soft); font-weight: 500; }
+    .dp-label.today { color: var(--accent); font-weight: 700; }
+    .dp-circle { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; background: var(--line); border: 2px solid transparent; }
+    .dp-circle.today { border-color: var(--accent); }
+    .dp-focus { font-size: 9px; color: #bbb; text-align: center; line-height: 1.3; }
+
+    .weigh-row { display: flex; gap: 0; align-items: stretch; }
+    .weigh-col { flex: 1; padding: 0 12px; }
+    .weigh-col:first-child { padding-left: 0; }
+    .weigh-col-label { font-size: 11px; color: var(--soft); margin-bottom: 4px; }
+    .weigh-big { font-size: 28px; font-weight: 700; font-family: Georgia, serif; letter-spacing: -1px; }
+    .weigh-input { width: 100%; border: none; border-bottom: 1.5px solid var(--line); background: transparent; font-size: 28px; font-weight: 700; font-family: Georgia, serif; color: var(--ink); outline: none; padding: 2px 0; }
+    .weigh-input:focus { border-bottom-color: var(--accent); }
+    .vdiv { width: 1px; background: var(--line); flex-shrink: 0; }
+
+    .htable { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .htable th { font-size: 10px; color: var(--soft); text-align: left; padding-bottom: 8px; font-weight: 500; }
+    .htable .dth { text-align: center; width: 30px; }
+    .htable td { padding: 4px 0; }
+    .htable .dtd { text-align: center; }
+    .hdot { width: 22px; height: 22px; border-radius: 6px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .hdot.met { background: var(--accent); color: #fff; }
+    .hdot.logged { background: #f0c4c4; color: #fff; }
+    .hdot.empty { background: var(--line); }
+
+    /* Progress tab */
+    .stat-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .stat-box { flex: 1; background: var(--card); border-radius: 14px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .stat-label { font-size: 10px; color: var(--soft); letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; }
+    .stat-val { font-size: 26px; font-weight: 700; font-family: Georgia, serif; letter-spacing: -1px; margin: 4px 0 0; }
+    .stat-unit { font-size: 11px; color: var(--soft); }
+
+    .log-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .log-row:last-of-type { border-bottom: none; }
+    .log-date { flex: 1; font-size: 14px; }
+    .log-diff { font-size: 12px; font-weight: 600; }
+    .log-wt { font-size: 18px; font-weight: 700; font-family: Georgia, serif; margin-right: 4px; }
+    .log-del { font-size: 14px; color: #ddd; cursor: pointer; padding: 4px 2px; }
+
+    .add-form { display: flex; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); margin-top: 8px; }
+    .add-input { border: none; border-bottom: 1.5px solid var(--line); background: transparent; font-size: 14px; font-family: inherit; color: var(--ink); outline: none; padding: 2px 4px; }
+    .add-input:focus { border-bottom-color: var(--accent); }
+    .add-btn { border: none; border-radius: 10px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; padding: 8px 14px; cursor: pointer; flex-shrink: 0; }
+
+    .ms-date { font-size: 11px; color: var(--accent); margin-top: 2px; }
+    .empty { text-align: center; color: var(--soft); font-size: 14px; padding: 24px 0; }
+
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1c1a17; --card: #252320; --ink: #f0ede6; --line: #333028; --accent-soft: #3a3020; }
+      #nav, #header { background: #1c1a17; }
+      #nav { background: #252320; }
+      .hbox { background: #2a2720; }
+    }
+
+    /* PIN screen */
+    #pin-screen {
+      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 40px 32px; gap: 0;
+    }
+    #pin-screen.hidden { display: none; }
+    .pin-logo { font-size: 40px; margin-bottom: 20px; }
+    .pin-title { font-family: Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .pin-sub { font-size: 13px; color: var(--soft); margin-bottom: 36px; font-style: italic; }
+    .pin-dots { display: flex; gap: 14px; margin-bottom: 36px; }
+    .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--soft); transition: all 0.15s; }
+    .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+    .pin-dot.shake { animation: shake 0.3s ease; }
+    .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-width: 280px; }
+    .pin-key {
+      aspect-ratio: 1; border: none; border-radius: 16px; background: var(--card);
+      font-size: 22px; font-weight: 600; color: var(--ink); cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07); transition: transform 0.1s, background 0.1s;
+      font-family: Georgia, serif;
+    }
+    .pin-key:active { transform: scale(0.93); background: var(--accent-soft); }
+    .pin-key.del { font-size: 18px; color: var(--soft); background: transparent; box-shadow: none; }
+    .pin-key.empty { background: transparent; box-shadow: none; cursor: default; }
+    .pin-error { font-size: 12px; color: #c47878; margin-top: 16px; opacity: 0; transition: opacity 0.2s; }
+    .pin-error.show { opacity: 1; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .pin-change-link { font-size: 12px; color: var(--soft); margin-top: 24px; cursor: pointer; text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-logo">🏋️</div>
+  <div class="pin-title">Workout Tracker</div>
+  <div class="pin-sub">Enter your PIN to continue</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-grid">
+    <button class="pin-key" data-k="1">1</button>
+    <button class="pin-key" data-k="2">2</button>
+    <button class="pin-key" data-k="3">3</button>
+    <button class="pin-key" data-k="4">4</button>
+    <button class="pin-key" data-k="5">5</button>
+    <button class="pin-key" data-k="6">6</button>
+    <button class="pin-key" data-k="7">7</button>
+    <button class="pin-key" data-k="8">8</button>
+    <button class="pin-key" data-k="9">9</button>
+    <button class="pin-key empty" disabled></button>
+    <button class="pin-key" data-k="0">0</button>
+    <button class="pin-key del" id="pin-del">⌫</button>
+  </div>
+  <div class="pin-error" id="pin-error">Incorrect PIN — try again</div>
+  <div class="pin-change-link" id="pin-change-link">Change PIN</div>
+</div>
+
+<div id="app">
+  <div id="header"></div>
+  <div id="content"></div>
+  <nav id="nav"></nav>
+</div>
+<script>
+// ── DATA ───────────────────────────────────────────────────────
+const W = {
+  1:{name:'Monday',title:'Lower Body',emoji:'🏋️',color:'#c4a882',corr:true,sections:[
+    {label:'Main Lifts',exercises:[
+      {id:'hip_thrust',name:'Barbell hip thrusts',sets:'4 × 8–10'},
+      {id:'rdl',name:'Romanian deadlifts',sets:'4 × 10'},
+      {id:'bss',name:'Bulgarian split squats',sets:'3 × 10 ea'},
+      {id:'leg_press',name:'Leg press',sets:'3 × 12'},
+    ]},
+    {label:'Accessories',exercises:[
+      {id:'kickback',name:'Cable kickbacks',sets:'3 × 15'},
+      {id:'abductor',name:'Hip abductor machine',sets:'3 × 15'},
+      {id:'calves',name:'Calf raises',sets:'3 × 15'},
+    ]},
+    {label:'Finish',exercises:[
+      {id:'incline_walk',name:'Incline treadmill walk',sets:'15 min',nw:true},
+    ]},
+  ]},
+  2:{name:'Tuesday',title:'Pilates + Walk',emoji:'🧘',color:'#a8c4b0',corr:true,light:true,items:[
+    {id:'corr',label:'Posture corrective block',detail:'10 min'},
+    {id:'pilates',label:'Pilates session',detail:'45 min'},
+    {id:'steps_i',label:'Steps target',detail:'8–10k'},
+  ]},
+  3:{name:'Wednesday',title:'Upper Body',emoji:'💪',color:'#b0a8c4',corr:true,sections:[
+    {label:'Back + Shoulders',exercises:[
+      {id:'lat_pull',name:'Lat pulldowns',sets:'4 × 10'},
+      {id:'cable_row',name:'Seated cable rows',sets:'4 × 10'},
+      {id:'face_pull',name:'Face pulls',sets:'3 × 15'},
+      {id:'rear_delt',name:'Rear delt flyes',sets:'3 × 12'},
+      {id:'sh_press',name:'DB shoulder press',sets:'3 × 10'},
+    ]},
+    {label:'Arms',exercises:[
+      {id:'bicep',name:'Bicep curls',sets:'3 × 12'},
+      {id:'tricep',name:'Tricep pushdowns',sets:'3 × 12'},
+    ]},
+    {label:'Core',exercises:[
+      {id:'dead_bug',name:'Dead bugs',sets:'3 × 12',nw:true},
+      {id:'cable_crunch',name:'Cable crunches',sets:'3 × 15'},
+      {id:'plank',name:'Plank',sets:'3 × 30–45s',nw:true},
+    ]},
+  ]},
+  4:{name:'Thursday',title:'Active Recovery',emoji:'🚶',color:'#c4b8a8',light:true,items:[
+    {id:'walk_i',label:'Long walk',detail:'30–45 min'},
+    {id:'stretch',label:'Stretching / mobility',detail:'20 min'},
+    {id:'opt_pil',label:'Optional: light Pilates',detail:''},
+  ]},
+  5:{name:'Friday',title:'Full Body',emoji:'🔥',color:'#c4a8a8',corr:true,sections:[
+    {label:'Compound Lifts',exercises:[
+      {id:'deadlift',name:'Deadlifts / Trap bar',sets:'4 × 6–8'},
+      {id:'goblet',name:'Goblet squats',sets:'3 × 12'},
+      {id:'db_bench',name:'DB bench press',sets:'3 × 10'},
+      {id:'db_row',name:'Single-arm DB rows',sets:'3 × 10 ea'},
+      {id:'fri_thr',name:'Hip thrusts',sets:'3 × 12'},
+      {id:'farmer',name:'Farmer carries',sets:'3 × 30m',nw:true},
+    ]},
+  ]},
+  6:{name:'Saturday',title:'Cardio',emoji:'🏃',color:'#a8bcc4',light:true,cardioChoice:true,items:[
+    {id:'run',label:'Run / jog'},{id:'cycle',label:'Cycling'},
+    {id:'rowing',label:'Rowing machine'},{id:'swim',label:'Swimming'},
+  ]},
+  0:{name:'Sunday',title:'Rest',emoji:'😴',color:'#b8c4a8',rest:true},
+};
+
+const CORR = [
+  {id:'dh',label:'Dead hangs',detail:'3 × 20–30s'},
+  {id:'fp',label:'Face pulls',detail:'3 × 15'},
+  {id:'bp',label:'Band pull-aparts',detail:'3 × 20'},
+  {id:'wa',label:'Wall angels',detail:'2 × 10'},
+  {id:'hf',label:'Hip flexor stretch',detail:'60s each'},
+  {id:'ct',label:'Chin tucks',detail:'2 × 10'},
+];
+
+const MS = [
+  {id:'shoulders',label:'Shoulders no longer rounding'},
+  {id:'head',label:'Head naturally more upright'},
+  {id:'back',label:'Less lower back tension'},
+  {id:'core',label:'Core feels stronger'},
+  {id:'tall',label:'Looking / standing taller'},
+];
+
+const DORD = [1,2,3,4,5,6,0];
+const DK = {0:'sun',1:'mon',2:'tue',3:'wed',4:'thu',5:'fri',6:'sat'};
+const DS = {0:'Su',1:'Mo',2:'Tu',3:'We',4:'Th',5:'Fr',6:'Sa'};
+const DF = {0:'Rest',1:'Lower\nBody',2:'Pilates',3:'Upper\nBody',4:'Recovery',5:'Full\nBody',6:'Cardio'};
+const HT = {protein:120,steps:8000,water:2,sleep:7};
+
+// ── STATE ──────────────────────────────────────────────────────
+let tab = 'today';
+const DOW = new Date().getDay();
+const WK = getMondayKey();
+let wkData = {}, prog = [], miles = {};
+
+function getMondayKey() {
+  const d = new Date(), day = d.getDay();
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+  return d.toISOString().slice(0,10);
+}
+
+function loadAll() {
+  try { wkData = JSON.parse(localStorage.getItem('wt_wk_'+WK)||'{}'); } catch { wkData={}; }
+  try { prog = JSON.parse(localStorage.getItem('wt_prog')||'[]'); } catch { prog=[]; }
+  try { miles = JSON.parse(localStorage.getItem('wt_ms')||'{}'); } catch { miles={}; }
+}
+function saveWk() { localStorage.setItem('wt_wk_'+WK, JSON.stringify(wkData)); }
+function saveProg() { localStorage.setItem('wt_prog', JSON.stringify(prog)); }
+function saveMs() { localStorage.setItem('wt_ms', JSON.stringify(miles)); }
+
+function dd(dow) {
+  const k = DK[dow];
+  if (!wkData[k]) wkData[k] = {};
+  return wkData[k];
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtD(iso) { return new Date(iso+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}); }
+
+// ── HEADER ─────────────────────────────────────────────────────
+function renderHeader() {
+  const wo = W[DOW];
+  const t = {
+    today:`<div class="h-title">Today</div><div class="h-sub">${wo.name} · ${wo.title}</div>`,
+    week:`<div class="h-title">This Week</div><div class="h-sub">Overview & habits</div>`,
+    progress:`<div class="h-title">Progress</div><div class="h-sub">Weight log & milestones</div>`,
+  };
+  document.getElementById('header').innerHTML = t[tab];
+}
+
+// ── NAV ────────────────────────────────────────────────────────
+function renderNav() {
+  const tabs = [{id:'today',icon:'📋',label:'Today'},{id:'week',icon:'📅',label:'Week'},{id:'progress',icon:'📈',label:'Progress'}];
+  document.getElementById('nav').innerHTML = tabs.map(t =>
+    `<button class="nav-btn ${tab===t.id?'active':''}" data-tab="${t.id}">
+      <span class="nav-icon">${t.icon}</span>
+      <span class="nav-label">${t.label}</span>
+      <div class="nav-dot"></div>
+    </button>`
+  ).join('');
+}
+
+// ── TODAY ──────────────────────────────────────────────────────
+function renderToday() {
+  const wo = W[DOW], d = dd(DOW);
+  let h = '';
+
+  // Hero
+  const allEx = wo.sections ? wo.sections.flatMap(s=>s.exercises) : [];
+  const doneEx = allEx.filter(e=>d.exercises?.[e.id]?.done).length;
+  const pct = allEx.length ? Math.round(doneEx/allEx.length*100) : 0;
+  h += `<div class="card card-hero" style="background:${wo.color};border-radius:16px;">
+    <div class="emoji-bg">${wo.emoji}</div>
+    <div class="hero-day">${wo.name}</div>
+    <div class="hero-title">${wo.title}</div>
+    ${allEx.length ? `<div class="prog-wrap">
+      <div class="prog-labels"><span id="plbl">${doneEx}/${allEx.length} exercises</span><span id="ppct">${pct}%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="pfill" style="width:${pct}%"></div></div>
+    </div>` : ''}
+  </div>`;
+
+  if (wo.rest) {
+    h += `<div class="card rest-card"><span class="rest-emoji">😴</span><div class="rest-title">Rest Day</div><div class="rest-text">Recovery is where the gains happen.<br>Eat well, sleep well, repeat tomorrow.</div></div>`;
+  } else if (wo.light) {
+    if (wo.corr) h += corrCard(d);
+    h += `<div class="sec-label">${wo.cardioChoice?'Choose One':"Today's Plan"}</div><div class="card">`;
+    h += (wo.items||[]).map(item => `
+      <div class="ex-row">
+        <div class="cb ${d.items?.[item.id]?'checked':''}" data-light="${item.id}"><span class="cb-icon">✓</span></div>
+        <div class="ex-info"><div class="ex-name">${esc(item.label)}</div></div>
+        ${item.detail ? `<div class="ex-sets">${esc(item.detail)}</div>` : ''}
+      </div>`).join('');
+    h += `</div>`;
+    if (wo.cardioChoice) {
+      h += `<div class="sec-label">Duration</div><div class="card">
+        <div class="ex-row" style="border:none">
+          <div class="ex-info"><div class="ex-name">Time (min)</div></div>
+          <input class="w-input" style="width:80px" placeholder="min" value="${esc(d.duration||'')}" data-hf="duration">
+        </div></div>`;
+    }
+  } else if (wo.sections) {
+    if (wo.corr) h += corrCard(d);
+    wo.sections.forEach(sec => {
+      h += `<div class="sec-label">${esc(sec.label)}</div><div class="card">`;
+      h += sec.exercises.map(ex => `
+        <div class="ex-row">
+          <div class="cb ${d.exercises?.[ex.id]?.done?'checked':''}" data-exid="${ex.id}"><span class="cb-icon">✓</span></div>
+          <div class="ex-info"><div class="ex-name">${esc(ex.name)}</div><div class="ex-sets">${esc(ex.sets)}</div></div>
+          ${!ex.nw ? `<div><input class="w-input" placeholder="kg" value="${esc(d.exercises?.[ex.id]?.weight||'')}" data-wid="${ex.id}"><div class="w-label">kg</div></div>` : ''}
+        </div>`).join('');
+      h += `</div>`;
+    });
+  }
+
+  if (!wo.rest) {
+    h += `<div class="sec-label">Today's Habits</div><div class="hgrid">
+      <div class="hbox"><span class="hbox-label">Protein (g)</span><input class="h-input" placeholder="120" value="${esc(d.protein||'')}" data-hf="protein"></div>
+      <div class="hbox"><span class="hbox-label">Steps</span><input class="h-input" placeholder="8000" value="${esc(d.steps||'')}" data-hf="steps"></div>
+      <div class="hbox"><span class="hbox-label">Water (L)</span><input class="h-input" placeholder="2.0" value="${esc(d.water||'')}" data-hf="water"></div>
+      <div class="hbox"><span class="hbox-label">Sleep (h)</span><input class="h-input" placeholder="8" value="${esc(d.sleep||'')}" data-hf="sleep"></div>
+    </div>
+    <div class="sec-label">Notes</div>
+    <div class="card"><textarea class="notes-area" placeholder="How did it feel? Any PRs?" data-hf="notes">${esc(d.notes||'')}</textarea></div>`;
+  }
+
+  document.getElementById('content').innerHTML = h;
+
+  // Input listeners — update state without re-rendering
+  document.querySelectorAll('[data-hf]').forEach(el => {
+    el.addEventListener('input', () => { dd(DOW)[el.dataset.hf] = el.value; saveWk(); });
+  });
+  document.querySelectorAll('[data-wid]').forEach(el => {
+    el.addEventListener('input', () => {
+      const d2 = dd(DOW);
+      if (!d2.exercises) d2.exercises = {};
+      if (!d2.exercises[el.dataset.wid]) d2.exercises[el.dataset.wid] = {};
+      d2.exercises[el.dataset.wid].weight = el.value;
+      saveWk();
+    });
+  });
+}
+
+function corrCard(d) {
+  const allDone = CORR.every(c => d.correctives?.[c.id]);
+  return `<div class="sec-label">Posture Correctives</div>
+  <div class="card" id="corr-card" style="border-left:3px solid ${allDone?'#c4a882':'#e8e4dc'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:14px;font-weight:700;">Corrective Block</div>
+      <span class="tag ${allDone?'done':''}" id="corr-tag">${allDone?'Done ✓':'Start here'}</span>
+    </div>
+    ${CORR.map(c => `
+      <div class="ex-row">
+        <div class="cb ${d.correctives?.[c.id]?'checked':''}" data-corrid="${c.id}"><span class="cb-icon">✓</span></div>
+        <div class="ex-info"><div class="ex-name">${esc(c.label)}</div></div>
+        <div class="ex-sets">${esc(c.detail)}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function updateProgBar() {
+  const wo = W[DOW];
+  if (!wo.sections) return;
+  const d = dd(DOW);
+  const allEx = wo.sections.flatMap(s=>s.exercises);
+  const done = allEx.filter(e=>d.exercises?.[e.id]?.done).length;
+  const pct = Math.round(done/allEx.length*100);
+  const fill = document.getElementById('pfill');
+  if (fill) fill.style.width = pct+'%';
+  const lbl = document.getElementById('plbl'); if (lbl) lbl.textContent = `${done}/${allEx.length} exercises`;
+  const pp = document.getElementById('ppct'); if (pp) pp.textContent = pct+'%';
+}
+
+// ── WEEK ───────────────────────────────────────────────────────
+function renderWeek() {
+  const wi = wkData.weighIn || {};
+  const change = (wi.current && wi.previous)
+    ? (parseFloat(wi.current) - parseFloat(wi.previous)).toFixed(1) : null;
+
+  let h = `<div class="week-strip">`;
+  DORD.forEach(dow => {
+    const k = DK[dow], dd2 = wkData[k]||{};
+    const has = dd2.exercises||dd2.items||dd2.correctives||dd2.protein;
+    const isT = DOW===dow, wo = W[dow];
+    h += `<div class="day-pill">
+      <div class="dp-label ${isT?'today':''}">${DS[dow]}</div>
+      <div class="dp-circle ${isT?'today':''}" style="${has?'background:'+wo.color+'33':''}">${wo.emoji}</div>
+      <div class="dp-focus">${DF[dow]}</div>
+    </div>`;
+  });
+  h += `</div>`;
+
+  h += `<div class="sec-label">Weekly Weigh-in</div>
+  <div class="card">
+    <div class="weigh-row">
+      <div class="weigh-col" style="padding-left:0">
+        <div class="weigh-col-label">This week (kg)</div>
+        <input class="weigh-input" placeholder="—" value="${esc(wi.current||'')}" data-wi="current">
+      </div>
+      <div class="vdiv"></div>
+      <div class="weigh-col">
+        <div class="weigh-col-label">Last week (kg)</div>
+        <input class="weigh-input" placeholder="—" value="${esc(wi.previous||'')}" data-wi="previous">
+      </div>
+      ${change!==null?`
+      <div class="vdiv"></div>
+      <div class="weigh-col">
+        <div class="weigh-col-label">Change</div>
+        <div class="weigh-big" id="wi-change" style="color:${parseFloat(change)<=0?'#6aab7e':'#c47878'}">${parseFloat(change)>0?'+':''}${change}</div>
+      </div>`:'<div class="weigh-col" id="wi-change-slot"></div>'}
+    </div>
+    <div style="font-size:11px;color:#bbb;margin-top:10px;">Weigh Monday morning, before eating.</div>
+  </div>`;
+
+  const habits = [{key:'protein',label:'Protein',target:120},{key:'steps',label:'Steps',target:8000},{key:'water',label:'Water',target:2},{key:'sleep',label:'Sleep',target:7}];
+  h += `<div class="sec-label">Habit Summary</div><div class="card">
+  <table class="htable"><thead><tr><th></th>
+    ${DORD.map(d=>`<th class="dth" style="${DOW===d?'color:#c4a882;font-weight:700':''}">${DS[d]}</th>`).join('')}
+  </tr></thead><tbody>`;
+  habits.forEach(hb => {
+    h += `<tr><td style="color:#6b6b6b;font-size:12px;padding:4px 6px 4px 0">${hb.label}</td>`;
+    DORD.forEach(dow => {
+      const val = parseFloat(wkData[DK[dow]]?.[hb.key]);
+      const met = !isNaN(val)&&val>=hb.target, logged=!isNaN(val);
+      const cls = logged?(met?'met':'logged'):'empty';
+      h += `<td class="dtd"><div class="hdot ${cls}">${logged?(met?'✓':'!'):'·'}</div></td>`;
+    });
+    h += `</tr>`;
+  });
+  h += `</tbody></table></div>`;
+
+  document.getElementById('content').innerHTML = h;
+
+  document.querySelectorAll('[data-wi]').forEach(el => {
+    el.addEventListener('input', () => {
+      if (!wkData.weighIn) wkData.weighIn = {};
+      wkData.weighIn[el.dataset.wi] = el.value;
+      saveWk();
+      const wi2 = wkData.weighIn;
+      if (wi2.current && wi2.previous) {
+        const ch = (parseFloat(wi2.current)-parseFloat(wi2.previous)).toFixed(1);
+        let chEl = document.getElementById('wi-change');
+        if (!chEl) { renderWeek(); return; }
+        chEl.textContent = (parseFloat(ch)>0?'+':'')+ch;
+        chEl.style.color = parseFloat(ch)<=0?'#6aab7e':'#c47878';
+      }
+    });
+  });
+}
+
+// ── PROGRESS ───────────────────────────────────────────────────
+function renderProgress() {
+  const sorted = [...prog].sort((a,b)=>a.date.localeCompare(b.date));
+  const start = sorted[0]?.weight, latest = sorted[sorted.length-1]?.weight;
+  const tc = start&&latest&&sorted.length>=2 ? (latest-start).toFixed(1) : null;
+  let h = '';
+
+  if (sorted.length>=2) {
+    h += `<div class="stat-row">
+      <div class="stat-box"><div class="stat-label">Start</div><div class="stat-val">${start}</div><div class="stat-unit">kg</div></div>
+      <div class="stat-box"><div class="stat-label">Now</div><div class="stat-val">${latest}</div><div class="stat-unit">kg</div></div>
+      <div class="stat-box"><div class="stat-label">Change</div>
+        <div class="stat-val" style="color:${parseFloat(tc)<=0?'#6aab7e':'#c47878'}">${parseFloat(tc)>0?'+':''}${tc}</div>
+        <div class="stat-unit">kg</div></div>
+    </div>`;
+  }
+
+  h += `<div class="sec-label">Weight Log</div><div class="card">`;
+  if (!sorted.length) h += `<div class="empty">No entries yet — add your first below</div>`;
+  sorted.forEach((entry, i) => {
+    const prev = sorted[i-1];
+    const diff = prev ? (entry.weight-prev.weight).toFixed(1) : null;
+    const origIdx = prog.findIndex(p=>p.date===entry.date&&p.weight===entry.weight);
+    h += `<div class="log-row">
+      <div class="log-date">${fmtD(entry.date)}</div>
+      ${diff!==null?`<div class="log-diff" style="color:${parseFloat(diff)<=0?'#6aab7e':'#c47878'}">${parseFloat(diff)>0?'+':''}${diff}</div>`:''}
+      <div class="log-wt">${entry.weight}</div>
+      <div class="log-del" data-del="${origIdx}">✕</div>
+    </div>`;
+  });
+  h += `<div class="add-form">
+    <input class="add-input" type="date" id="nd" value="${new Date().toISOString().slice(0,10)}" style="width:115px;font-size:13px;">
+    <input class="add-input" type="number" step="0.1" placeholder="kg" id="nw" style="width:65px;text-align:center;">
+    <button class="add-btn" id="add-btn">+ Add</button>
+  </div></div>`;
+
+  h += `<div class="sec-label">Posture Milestones</div><div class="card">`;
+  h += MS.map((m,i) => `
+    <div class="ex-row ${i===MS.length-1?'':''}">
+      <div class="cb ${miles[m.id]?'checked':''}" data-msid="${m.id}"><span class="cb-icon">✓</span></div>
+      <div class="ex-info">
+        <div class="ex-name">${esc(m.label)}</div>
+        ${miles[m.id]?`<div class="ms-date">${esc(miles[m.id])}</div>`:''}
+      </div>
+    </div>`).join('');
+  h += `</div>`;
+
+  document.getElementById('content').innerHTML = h;
+
+  document.getElementById('add-btn')?.addEventListener('click', () => {
+    const w = parseFloat(document.getElementById('nw')?.value);
+    const dt = document.getElementById('nd')?.value;
+    if (!w||!dt) return;
+    prog.push({date:dt,weight:w});
+    saveProg();
+    document.getElementById('nw').value = '';
+    renderProgress();
+  });
+
+  document.querySelectorAll('[data-del]').forEach(el => {
+    el.addEventListener('click', () => {
+      prog.splice(parseInt(el.dataset.del),1);
+      saveProg();
+      renderProgress();
+    });
+  });
+}
+
+// ── EVENT DELEGATION ───────────────────────────────────────────
+document.getElementById('content').addEventListener('click', e => {
+  // Corrective cb
+  const cEl = e.target.closest('[data-corrid]');
+  if (cEl) {
+    const d2 = dd(DOW); if (!d2.correctives) d2.correctives = {};
+    d2.correctives[cEl.dataset.corrid] = !d2.correctives[cEl.dataset.corrid];
+    saveWk();
+    cEl.classList.toggle('checked', !!d2.correctives[cEl.dataset.corrid]);
+    const allDone = CORR.every(c=>d2.correctives?.[c.id]);
+    const t = document.getElementById('corr-tag');
+    if (t) { t.textContent=allDone?'Done ✓':'Start here'; t.classList.toggle('done',allDone); }
+    const cc = document.getElementById('corr-card');
+    if (cc) cc.style.borderLeftColor = allDone?'#c4a882':'#e8e4dc';
+    return;
+  }
+  // Exercise cb
+  const xEl = e.target.closest('[data-exid]');
+  if (xEl) {
+    const d2 = dd(DOW); if (!d2.exercises) d2.exercises = {};
+    const id = xEl.dataset.exid;
+    if (!d2.exercises[id]) d2.exercises[id]={};
+    d2.exercises[id].done = !d2.exercises[id].done;
+    saveWk();
+    xEl.classList.toggle('checked', !!d2.exercises[id].done);
+    updateProgBar();
+    return;
+  }
+  // Light item cb
+  const lEl = e.target.closest('[data-light]');
+  if (lEl) {
+    const d2 = dd(DOW); if (!d2.items) d2.items={};
+    d2.items[lEl.dataset.light] = !d2.items[lEl.dataset.light];
+    saveWk();
+    lEl.classList.toggle('checked', !!d2.items[lEl.dataset.light]);
+    return;
+  }
+  // Milestone cb
+  const mEl = e.target.closest('[data-msid]');
+  if (mEl) {
+    const id = mEl.dataset.msid;
+    miles[id] = miles[id] ? null : new Date().toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+    saveMs();
+    mEl.classList.toggle('checked', !!miles[id]);
+    const info = mEl.parentElement.querySelector('.ex-info');
+    let dateEl = info?.querySelector('.ms-date');
+    if (miles[id]) {
+      if (!dateEl) { dateEl=document.createElement('div'); dateEl.className='ms-date'; info?.appendChild(dateEl); }
+      dateEl.textContent = miles[id];
+    } else { dateEl?.remove(); }
+    return;
+  }
+  // Nav
+  const nEl = e.target.closest('[data-tab]');
+  if (nEl) { tab=nEl.dataset.tab; renderAll(); }
+});
+
+// ── INIT ───────────────────────────────────────────────────────
+function renderAll() {
+  renderHeader(); renderNav();
+  ({today:renderToday, week:renderWeek, progress:renderProgress})[tab]?.();
+  document.getElementById('content').scrollTop = 0;
+}
+
+// ── PIN LOCK ───────────────────────────────────────────────────
+const DEFAULT_PIN = '1234';
+let pinEntry = '';
+
+function getPin() { return localStorage.getItem('wt_pin') || DEFAULT_PIN; }
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('pd' + i);
+    if (d) d.classList.toggle('filled', i < pinEntry.length);
+  }
+}
+
+function pinShake() {
+  document.querySelectorAll('.pin-dot').forEach(d => {
+    d.classList.add('shake');
+    setTimeout(() => d.classList.remove('shake'), 400);
+  });
+}
+
+function unlockApp() {
+  const ps = document.getElementById('pin-screen');
+  if (ps) ps.classList.add('hidden');
+  loadAll();
+  renderAll();
+}
+
+function initPin() {
+  // Skip PIN if unlocked recently (same session)
+  if (sessionStorage.getItem('wt_unlocked')) { unlockApp(); return; }
+
+  document.getElementById('pin-screen')?.addEventListener('click', e => {
+    const key = e.target.closest('[data-k]');
+    if (key && pinEntry.length < 4) {
+      pinEntry += key.dataset.k;
+      updatePinDots();
+      if (pinEntry.length === 4) {
+        if (pinEntry === getPin()) {
+          sessionStorage.setItem('wt_unlocked', '1');
+          setTimeout(unlockApp, 120);
+        } else {
+          pinShake();
+          const err = document.getElementById('pin-error');
+          if (err) err.classList.add('show');
+          setTimeout(() => {
+            pinEntry = '';
+            updatePinDots();
+            if (err) err.classList.remove('show');
+          }, 800);
+        }
+      }
+    }
+    if (e.target.id === 'pin-del') {
+      pinEntry = pinEntry.slice(0, -1);
+      updatePinDots();
+    }
+    if (e.target.id === 'pin-change-link') {
+      const np = prompt('Enter a new 4-digit PIN:');
+      if (np && /^\d{4}$/.test(np)) {
+        localStorage.setItem('wt_pin', np);
+        alert('PIN updated to ' + np + '. Remember it!');
+      } else if (np) {
+        alert('PIN must be exactly 4 digits.');
+      }
+    }
+  });
+}
+
+initPin();
+</script>
+</body>
+</html>
