@@ -363,7 +363,6 @@ function renderToday(){
   const allEx=wo.sections?wo.sections.flatMap(s=>s.exercises):[];
   const doneEx=allEx.filter(e=>d.exercises?.[e.id]?.done).length;
   const pct=allEx.length?Math.round(doneEx/allEx.length*100):0;
-  const isToday=viewDay===DOW;
 
   // Day navigator — clean arrow style
   const prevDay=DORD[(DORD.indexOf(viewDay)+6)%7];
