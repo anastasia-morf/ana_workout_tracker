@@ -283,7 +283,7 @@ const DS={0:'Su',1:'Mo',2:'Tu',3:'We',4:'Th',5:'Fr',6:'Sa'};
 const DF={0:'Rest',1:'Lower\nBody',2:'Pilates',3:'Upper\nBody',4:'Recovery',5:'Full\nBody',6:'Cardio'};
 const TF={today:'🌸',week:'🌷',progress:'🌺'};
 
-let tab='today', selDay=new Date().getDay();
+let tab='today', selDay=new Date().getDay(), viewDay=new Date().getDay();
 const DOW=new Date().getDay(), WK=getMondayKey();
 let wkData={},prog=[],miles={};
 
@@ -301,8 +301,10 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function fmtD(iso){return new Date(iso+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});}
 
 function renderHeader(){
-  const wo=W[DOW];
-  const subs={today:`${wo.name} · ${wo.title}`,week:'Weekly overview',progress:'Weight log & milestones'};
+  const wo=W[viewDay];
+  const isToday=viewDay===DOW;
+  const dayLabel=isToday?'Today':wo.name;
+  const subs={today:`${dayLabel} · ${wo.title}`,week:'Weekly overview',progress:'Weight log & milestones'};
   const titles={today:'Today',week:'This Week',progress:'Progress'};
   document.getElementById('header').innerHTML=`
     <div class="h-title">${titles[tab]}</div>
@@ -336,8 +338,8 @@ function corrCard(d){
 }
 
 function updateProgBar(){
-  const wo=W[DOW]; if(!wo.sections)return;
-  const d=dd(DOW), allEx=wo.sections.flatMap(s=>s.exercises);
+  const wo=W[viewDay]; if(!wo.sections)return;
+  const d=dd(viewDay), allEx=wo.sections.flatMap(s=>s.exercises);
   const done=allEx.filter(e=>d.exercises?.[e.id]?.done).length;
   const pct=Math.round(done/allEx.length*100);
   const f=document.getElementById('pfill'); if(f)f.style.width=pct+'%';
@@ -346,14 +348,32 @@ function updateProgBar(){
 }
 
 function renderToday(){
-  const wo=W[DOW],d=dd(DOW);
+  const wo=W[viewDay],d=dd(viewDay);
   const allEx=wo.sections?wo.sections.flatMap(s=>s.exercises):[];
   const doneEx=allEx.filter(e=>d.exercises?.[e.id]?.done).length;
   const pct=allEx.length?Math.round(doneEx/allEx.length*100):0;
-  let h=`<div class="card card-hero" style="background:${wo.color};">
+  const isToday=viewDay===DOW;
+
+  // Day navigator
+  const prevDay=DORD[(DORD.indexOf(viewDay)+6)%7];
+  const nextDay=DORD[(DORD.indexOf(viewDay)+1)%7];
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:2px;">
+    <button class="day-nav-btn" data-daynav="${prevDay}">‹</button>
+    <div style="flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0;">`;
+  DORD.forEach(dow=>{
+    const isV=dow===viewDay, isT=dow===DOW, wo2=W[dow];
+    const dk=DK[dow], dd2=wkData[dk]||{};
+    const has=dd2.exercises||dd2.items||dd2.correctives||dd2.protein;
+    h+=`<button class="day-chip ${isV?'day-chip-active':''}" data-daynav="${dow}" style="${isV?'background:'+wo2.color+';color:#fff;':has?'background:'+wo2.color+'22;':''}">
+      ${isT&&!isV?'📍 ':''}<span style="font-size:11px;font-weight:700;">${DS[dow]}</span>
+    </button>`;
+  });
+  h+=`</div><button class="day-nav-btn" data-daynav="${nextDay}">›</button></div>`;
+
+  h+=`<div class="card card-hero" style="background:${wo.color};">
     <div class="emoji-bg">${wo.emoji}</div>
     <div class="hero-deco">✿ ❀ ✿</div>
-    <div class="hero-day">${wo.name}</div>
+    <div class="hero-day">${isToday?'Today — ':''} ${wo.name}</div>
     <div class="hero-title">${wo.title}</div>
     ${allEx.length?`<div class="prog-wrap">
       <div class="prog-labels"><span id="plbl">${doneEx}/${allEx.length} done</span><span id="ppct">${pct}%</span></div>
@@ -395,7 +415,7 @@ function renderToday(){
   }
 
   if(!wo.rest){
-    h+=`<div class="sec-label">Today's Habits</div>
+    h+=`<div class="sec-label">Habits</div>
     <div class="hgrid">
       <div class="hbox"><span class="hbox-label">Protein (g)</span><input class="h-input" placeholder="120" value="${esc(d.protein||'')}" data-hf="protein"></div>
       <div class="hbox"><span class="hbox-label">Steps</span><input class="h-input" placeholder="8000" value="${esc(d.steps||'')}" data-hf="steps"></div>
@@ -407,9 +427,9 @@ function renderToday(){
   }
 
   document.getElementById('content').innerHTML=h;
-  document.querySelectorAll('[data-hf]').forEach(el=>el.addEventListener('input',()=>{dd(DOW)[el.dataset.hf]=el.value;saveWk();}));
+  document.querySelectorAll('[data-hf]').forEach(el=>el.addEventListener('input',()=>{dd(viewDay)[el.dataset.hf]=el.value;saveWk();}));
   document.querySelectorAll('[data-wid]').forEach(el=>el.addEventListener('input',()=>{
-    const d2=dd(DOW); if(!d2.exercises)d2.exercises={};
+    const d2=dd(viewDay); if(!d2.exercises)d2.exercises={};
     if(!d2.exercises[el.dataset.wid])d2.exercises[el.dataset.wid]={};
     d2.exercises[el.dataset.wid].weight=el.value; saveWk();
   }));
