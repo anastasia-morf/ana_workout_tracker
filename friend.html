@@ -4,289 +4,138 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Workout">
   <meta name="theme-color" content="#fff5f7">
-  <title>Workout Tracker</title>
+  <title>Ana's Workout 🌸</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    :root {
-      --bg: #fff5f7; --card: #ffffff; --ink: #2d1520; --soft: #b08898;
-      --line: #fce8ef; --accent: #e8799a; --accent-soft: #fdeef3;
-      --lavender: #e8d8f8; --mint: #d0f0e4; --peach: #fde0cc;
-      --butter: #fdf4cc; --sky: #cce8f8;
-    }
-    html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: system-ui,-apple-system,sans-serif; overscroll-behavior: none; }
-    #app { display: flex; flex-direction: column; height: 100dvh; max-width: 430px; margin: 0 auto; }
+    :root { --bg:#fff5f7; --card:#fff; --ink:#2d1520; --soft:#b08898; --line:#fce8ef; --accent:#e8799a; --accent-soft:#fdeef3; }
+    body { background: var(--bg); color: var(--ink); font-family: system-ui,-apple-system,sans-serif; min-height: 100vh; }
+    #page { max-width: 430px; margin: 0 auto; padding: 0 16px 60px; }
 
-    #header { flex-shrink: 0; padding: 52px 20px 14px; background: var(--bg); position: relative; }
-    #header::after { content: '✿'; position: absolute; right: 20px; top: 48px; font-size: 28px; color: var(--accent); opacity: 0.2; pointer-events: none; }
-    .h-title { font-family: Georgia, serif; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
-    .h-sub { font-size: 13px; color: var(--soft); font-style: italic; margin-top: 2px; }
+    .page-header { padding: 52px 0 16px; position: relative; }
+    .page-header::after { content: '✿'; position: absolute; right: 0; top: 50px; font-size: 28px; color: var(--accent); opacity: 0.18; }
+    .page-title { font-family: Georgia, serif; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .page-sub { font-size: 13px; color: var(--soft); font-style: italic; margin-top: 3px; }
 
-    #content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 28px; }
-
-    #nav { flex-shrink: 0; display: flex; background: #fff; border-top: 1.5px solid var(--line); padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -2px 12px rgba(232,121,154,0.08); }
-    .nav-btn { flex: 1; border: none; background: transparent; padding: 10px 0 12px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-    .nav-icon { font-size: 22px; }
-    .nav-label { font-size: 10px; letter-spacing: 0.4px; font-weight: 600; color: var(--soft); }
-    .nav-btn.active .nav-label { color: var(--accent); }
-    .nav-dot { width: 5px; height: 5px; border-radius: 3px; background: var(--accent); opacity: 0; }
-    .nav-btn.active .nav-dot { opacity: 1; }
-
-    .card { background: var(--card); border-radius: 20px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(232,121,154,0.09); }
-    .card-hero { padding: 20px; position: relative; overflow: hidden; color: #fff; margin-top: 12px; border-radius: 22px; }
-    .emoji-bg { position: absolute; right: 14px; top: 10px; font-size: 54px; opacity: 0.2; pointer-events: none; }
-    .hero-deco { position: absolute; left: 14px; bottom: 10px; font-size: 16px; opacity: 0.3; letter-spacing: 4px; pointer-events: none; }
+    .card { background: var(--card); border-radius: 20px; padding: 16px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(232,121,154,0.09); }
+    .card-hero { padding: 20px; position: relative; overflow: hidden; color: #fff; border-radius: 22px; margin-bottom: 10px; }
+    .hero-emoji { position: absolute; right: 14px; top: 10px; font-size: 52px; opacity: 0.2; pointer-events: none; }
+    .hero-deco { position: absolute; left: 14px; bottom: 10px; font-size: 15px; opacity: 0.28; letter-spacing: 4px; pointer-events: none; }
     .hero-day { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.85; font-weight: 700; }
-    .hero-title { font-family: Georgia, serif; font-size: 28px; font-weight: 700; margin-top: 2px; letter-spacing: -0.5px; }
+    .hero-title { font-family: Georgia, serif; font-size: 26px; font-weight: 700; margin-top: 2px; }
+    .hero-date { font-size: 12px; opacity: 0.75; margin-top: 6px; }
     .prog-wrap { margin-top: 14px; }
     .prog-labels { display: flex; justify-content: space-between; font-size: 11px; opacity: 0.9; margin-bottom: 6px; font-weight: 600; }
     .prog-track { background: rgba(255,255,255,0.3); border-radius: 4px; height: 5px; }
-    .prog-fill { background: #fff; border-radius: 4px; height: 5px; transition: width 0.3s; }
+    .prog-fill { background: #fff; border-radius: 4px; height: 5px; }
 
     .flower-strip { font-size: 15px; letter-spacing: 5px; opacity: 0.3; text-align: center; margin: 5px 0 2px; pointer-events: none; }
 
     .sec-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 14px 0 6px; display: flex; align-items: center; gap: 6px; }
     .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
-    .ex-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .ex-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
     .ex-row:last-child { border-bottom: none; }
-    .ex-info { flex: 1; min-width: 0; }
-    .ex-name { font-size: 14px; font-weight: 500; }
-    .ex-sets { font-size: 11px; color: var(--soft); margin-top: 1px; }
+    .ex-tick { width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+    .ex-tick.done { background: var(--accent); color: #fff; box-shadow: 0 2px 6px rgba(232,121,154,0.3); }
+    .ex-tick.todo { background: var(--line); color: var(--line); }
+    .ex-name { flex: 1; font-size: 14px; font-weight: 500; }
+    .ex-name.done { color: var(--ink); }
+    .ex-name.todo { color: var(--soft); }
+    .ex-sets { font-size: 11px; color: var(--soft); white-space: nowrap; }
+    .ex-weight { font-size: 12px; color: var(--accent); font-weight: 700; background: var(--accent-soft); border-radius: 8px; padding: 2px 8px; white-space: nowrap; }
 
-    .cb { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line); flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; user-select: none; }
-    .cb.checked { background: var(--accent); border-color: var(--accent); box-shadow: 0 2px 8px rgba(232,121,154,0.35); }
-    .cb-icon { font-size: 13px; color: #fff; display: none; }
-    .cb.checked .cb-icon { display: block; }
+    .hab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .hab-box { border-radius: 16px; padding: 12px 14px; }
+    .hab-lbl { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px; }
+    .hab-val { font-size: 22px; font-weight: 700; font-family: Georgia, serif; letter-spacing: -0.5px; }
+    .hab-unit { font-size: 12px; font-weight: 400; margin-left: 2px; }
+    .hab-note { font-size: 10px; margin-top: 3px; }
+    .hab-met { background: var(--accent-soft); }
+    .hab-met .hab-lbl, .hab-met .hab-val, .hab-met .hab-note { color: var(--accent); }
+    .hab-miss { background: #f7f0f3; }
+    .hab-miss .hab-lbl { color: var(--soft); }
+    .hab-miss .hab-val { color: #d0b0bc; }
+    .hab-miss .hab-note { color: var(--soft); }
 
-    .w-input { width: 58px; border: none; border-bottom: 2px solid var(--line); background: transparent; font-size: 14px; text-align: center; color: var(--ink); outline: none; padding: 2px 0; font-family: inherit; font-weight: 600; }
-    .w-input:focus { border-bottom-color: var(--accent); }
-    .w-label { font-size: 10px; color: var(--soft); text-align: center; margin-top: 2px; }
-
-    .hgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-    .hbox { background: var(--accent-soft); border-radius: 16px; padding: 11px 13px; }
-    .hbox-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); font-weight: 700; display: block; margin-bottom: 5px; }
-    .h-input { width: 100%; border: none; border-bottom: 2px solid var(--line); background: transparent; font-size: 18px; font-weight: 700; color: var(--ink); outline: none; padding: 2px 0; font-family: inherit; }
-    .h-input:focus { border-bottom-color: var(--accent); }
-
-    .notes-area { width: 100%; border: none; background: transparent; font-size: 14px; font-family: inherit; color: var(--ink); resize: none; outline: none; min-height: 60px; line-height: 1.6; }
-
-    .tag { display: inline-block; font-size: 10px; background: var(--line); color: var(--soft); border-radius: 20px; padding: 3px 10px; letter-spacing: 0.5px; font-weight: 700; }
-    .tag.done { background: var(--accent); color: #fff; }
-
-    .rest-card { text-align: center; padding: 48px 20px; }
-    .rest-emoji { font-size: 56px; display: block; margin-bottom: 14px; }
-    .rest-title { font-family: Georgia, serif; font-size: 22px; font-weight: 700; margin-bottom: 10px; }
-    .rest-text { font-size: 14px; color: var(--soft); line-height: 1.7; }
-
-    /* Week tab */
-    .week-strip { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; padding: 4px 0 8px; }
-    .week-strip::-webkit-scrollbar { display: none; }
-    .day-pill { flex-shrink: 0; width: 46px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .dp-label { font-size: 10px; color: var(--soft); font-weight: 600; transition: color 0.15s; }
-    .dp-label.today { color: var(--accent); }
-    .dp-label.sel { color: var(--accent); font-weight: 800; }
-    .dp-circle { width: 42px; height: 42px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: var(--accent-soft); border: 2.5px solid transparent; transition: all 0.15s; }
-    .dp-circle.today { border-color: var(--accent); }
-    .dp-circle.sel { border-color: var(--accent); box-shadow: 0 3px 12px rgba(232,121,154,0.3); transform: scale(1.08); }
-    .dp-focus { font-size: 9px; color: var(--soft); text-align: center; line-height: 1.3; }
-
-    .day-detail { background: var(--accent-soft); border-radius: 18px; padding: 14px; margin-bottom: 10px; border: 1.5px solid var(--line); }
-    .dd-title { font-family: Georgia, serif; font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .dd-habits { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .dd-hab { background: #fff; border-radius: 10px; padding: 8px 10px; }
-    .dd-hab-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--soft); font-weight: 700; }
-    .dd-hab-val { font-size: 17px; font-weight: 700; color: var(--ink); margin-top: 2px; font-family: Georgia, serif; }
-    .dd-hab-val.empty { color: var(--line); font-size: 14px; }
-    .dd-comp { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .dd-bar-track { flex: 1; background: rgba(232,121,154,0.15); border-radius: 4px; height: 6px; }
-    .dd-bar-fill { background: var(--accent); border-radius: 4px; height: 6px; }
-    .dd-pct { font-size: 12px; color: var(--accent); font-weight: 700; }
-
-    .weigh-row { display: flex; gap: 0; align-items: stretch; }
-    .weigh-col { flex: 1; padding: 0 12px; }
-    .weigh-col:first-child { padding-left: 0; }
-    .weigh-col-label { font-size: 11px; color: var(--soft); margin-bottom: 4px; font-weight: 600; }
-    .weigh-big { font-size: 28px; font-weight: 700; font-family: Georgia, serif; letter-spacing: -1px; }
-    .weigh-input { width: 100%; border: none; border-bottom: 2px solid var(--line); background: transparent; font-size: 28px; font-weight: 700; font-family: Georgia, serif; color: var(--ink); outline: none; padding: 2px 0; }
-    .weigh-input:focus { border-bottom-color: var(--accent); }
-    .vdiv { width: 1px; background: var(--line); flex-shrink: 0; }
-
-    .htable { width: 100%; border-collapse: collapse; }
-    .htable th { font-size: 10px; color: var(--soft); text-align: left; padding-bottom: 8px; font-weight: 600; }
-    .htable .dth { text-align: center; width: 30px; }
-    .htable td { padding: 4px 0; }
-    .htable .dtd { text-align: center; }
-    .hdot { width: 22px; height: 22px; border-radius: 6px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
-    .hdot.met { background: var(--accent); color: #fff; }
-    .hdot.logged { background: #f8c4d0; color: #fff; }
-    .hdot.empty { background: var(--line); }
-
-    .stat-row { display: flex; gap: 8px; margin-bottom: 10px; }
-    .stat-box { flex: 1; background: var(--card); border-radius: 18px; padding: 12px; text-align: center; box-shadow: 0 2px 10px rgba(232,121,154,0.09); }
-    .stat-label { font-size: 10px; color: var(--soft); letter-spacing: 0.5px; text-transform: uppercase; font-weight: 700; }
-    .stat-val { font-size: 26px; font-weight: 700; font-family: Georgia, serif; letter-spacing: -1px; margin: 4px 0 0; }
+    .stat-row { display: flex; gap: 8px; }
+    .stat-box { flex: 1; background: var(--card); border-radius: 16px; padding: 12px; text-align: center; box-shadow: 0 2px 8px rgba(232,121,154,0.08); }
+    .stat-lbl { font-size: 10px; color: var(--soft); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .stat-val { font-size: 24px; font-weight: 700; font-family: Georgia, serif; letter-spacing: -1px; margin: 4px 0 0; }
     .stat-unit { font-size: 11px; color: var(--soft); }
 
-    .log-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-    .log-row:last-of-type { border-bottom: none; }
-    .log-date { flex: 1; font-size: 14px; font-weight: 500; }
-    .log-diff { font-size: 12px; font-weight: 700; }
-    .log-wt { font-size: 18px; font-weight: 700; font-family: Georgia, serif; }
-    .log-del { font-size: 14px; color: var(--line); cursor: pointer; padding: 4px; }
+    /* Cheer box */
+    .cheer-intro { font-size: 14px; color: var(--soft); line-height: 1.6; margin-bottom: 12px; }
+    .cheer-lbl { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); font-weight: 700; display: block; margin-bottom: 6px; margin-top: 10px; }
+    .cheer-input { width: 100%; border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-family: inherit; color: var(--ink); background: var(--bg); outline: none; }
+    .cheer-input:focus { border-color: var(--accent); }
+    .cheer-textarea { width: 100%; border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-family: inherit; color: var(--ink); background: var(--bg); outline: none; resize: none; min-height: 80px; margin-top: 8px; }
+    .cheer-textarea:focus { border-color: var(--accent); }
+    .cheer-btn { width: 100%; border: none; border-radius: 14px; background: var(--accent); color: #fff; font-size: 15px; font-weight: 700; padding: 13px; cursor: pointer; margin-top: 10px; box-shadow: 0 3px 10px rgba(232,121,154,0.3); font-family: inherit; transition: transform 0.1s; }
+    .cheer-btn:active { transform: scale(0.97); }
+    .cheer-hint { font-size: 12px; color: var(--soft); text-align: center; margin-top: 8px; line-height: 1.5; font-style: italic; }
+    .copied-msg { font-size: 13px; color: var(--accent); font-weight: 700; text-align: center; margin-top: 8px; opacity: 0; transition: opacity 0.2s; }
+    .copied-msg.show { opacity: 1; }
 
-    .add-form { display: flex; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); margin-top: 8px; }
-    .add-input { border: none; border-bottom: 2px solid var(--line); background: transparent; font-size: 14px; font-family: inherit; color: var(--ink); outline: none; padding: 2px 4px; font-weight: 500; }
-    .add-input:focus { border-bottom-color: var(--accent); }
-    .add-btn { border: none; border-radius: 12px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 700; padding: 9px 16px; cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 10px rgba(232,121,154,0.3); }
+    /* No data */
+    .no-data { text-align: center; padding: 60px 20px; }
+    .no-data-emoji { font-size: 60px; display: block; margin-bottom: 16px; }
+    .no-data-title { font-family: Georgia, serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .no-data-text { font-size: 14px; color: var(--soft); line-height: 1.7; }
 
-    .ms-date { font-size: 11px; color: var(--accent); margin-top: 2px; font-weight: 600; }
-    .empty { text-align: center; color: var(--soft); font-size: 14px; padding: 24px 0; line-height: 1.8; }
-
-    /* Day navigator */
-    .day-nav-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; margin-bottom: 4px; }
-    .day-nav-arr { -webkit-appearance: none; appearance: none; border: none; background: var(--card); border-radius: 14px; width: 40px; height: 40px; font-size: 20px; color: var(--accent); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(232,121,154,0.15); font-weight: 700; transition: transform 0.1s; }
-    .day-nav-arr:active { transform: scale(0.88); background: var(--accent-soft); }
-    .day-nav-center { flex: 1; text-align: center; }
-    .day-nav-name { font-family: Georgia, serif; font-size: 17px; font-weight: 700; color: var(--ink); }
-    .day-nav-badge { display: inline-block; font-size: 10px; background: var(--accent); color: #fff; border-radius: 20px; padding: 2px 8px; margin-left: 6px; font-weight: 700; letter-spacing: 0.5px; vertical-align: middle; }
-    .day-dots { display: flex; justify-content: center; gap: 5px; margin-bottom: 2px; }
-    .day-dot { width: 6px; height: 6px; border-radius: 3px; background: var(--line); transition: all 0.2s; }
-    .day-dot.active { width: 18px; background: var(--accent); }
-
-    /* PIN SCREEN */
-    #pin-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; }
-    #pin-screen.hidden { display: none; }
-    .pin-flowers { font-size: 26px; letter-spacing: 8px; margin-bottom: 14px; opacity: 0.65; }
-    .pin-logo { font-size: 54px; margin-bottom: 8px; }
-    .pin-title { font-family: Georgia, serif; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
-    .pin-sub { font-size: 13px; color: var(--soft); margin-bottom: 32px; font-style: italic; }
-    .pin-dots { display: flex; gap: 14px; margin-bottom: 36px; }
-    .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); transition: all 0.15s; }
-    .pin-dot.filled { background: var(--accent); border-color: var(--accent); box-shadow: 0 2px 8px rgba(232,121,154,0.4); }
-    .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 270px; }
-    .pin-key { aspect-ratio: 1; border: none; border-radius: 18px; background: var(--card); font-size: 22px; font-weight: 700; color: var(--ink); cursor: pointer; box-shadow: 0 2px 8px rgba(232,121,154,0.12); transition: transform 0.1s, background 0.1s; font-family: Georgia, serif; }
-    .pin-key:active { transform: scale(0.91); background: var(--accent-soft); }
-    .pin-key.del { font-size: 18px; color: var(--soft); background: transparent; box-shadow: none; }
-    .pin-key.empty { background: transparent; box-shadow: none; cursor: default; }
-    .pin-error { font-size: 12px; color: #c45878; margin-top: 16px; opacity: 0; transition: opacity 0.2s; font-weight: 600; }
-    .pin-error.show { opacity: 1; }
-    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 60%{transform:translateX(8px)} }
-    .shake { animation: shake 0.35s ease; }
+    /* Notes */
+    .notes-box { background: var(--accent-soft); border-radius: 14px; padding: 12px 14px; font-size: 14px; color: var(--ink); line-height: 1.6; font-style: italic; }
+    .notes-box::before { content: '"'; font-family: Georgia, serif; font-size: 24px; color: var(--accent); opacity: 0.5; line-height: 0; vertical-align: -8px; margin-right: 4px; }
   </style>
 </head>
 <body>
-
-<div id="pin-screen">
-  <div class="pin-flowers">🌸 🌷 🌸</div>
-  <div class="pin-logo">🐰</div>
-  <div class="pin-title">Workout Tracker</div>
-  <div class="pin-sub">Enter your PIN to continue</div>
-  <div class="pin-dots" id="pin-dots">
-    <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
-    <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+<div id="page">
+  <div class="page-header">
+    <div class="page-title">Ana's Progress 🌸</div>
+    <div class="page-sub" id="page-sub">Loading...</div>
   </div>
-  <div class="pin-grid">
-    <button class="pin-key" data-k="1">1</button>
-    <button class="pin-key" data-k="2">2</button>
-    <button class="pin-key" data-k="3">3</button>
-    <button class="pin-key" data-k="4">4</button>
-    <button class="pin-key" data-k="5">5</button>
-    <button class="pin-key" data-k="6">6</button>
-    <button class="pin-key" data-k="7">7</button>
-    <button class="pin-key" data-k="8">8</button>
-    <button class="pin-key" data-k="9">9</button>
-    <button class="pin-key empty" disabled></button>
-    <button class="pin-key" data-k="0">0</button>
-    <button class="pin-key del" id="pin-del">⌫</button>
-  </div>
-  <div class="pin-error" id="pin-error">Incorrect PIN — try again 🌷</div>
-</div>
-
-<div id="app">
-  <div id="header"></div>
   <div id="content"></div>
-  <nav id="nav"></nav>
 </div>
 
 <script>
-// ── CLOUD CONFIG — paste your Firebase database URL here ──────
-const DB_URL = 'FILL_IN_YOUR_FIREBASE_URL';
-// e.g. https://ana-workout-default-rtdb.firebaseio.com
-// No API key needed — just the URL!
-// ─────────────────────────────────────────────────────────────
-
-// ── SHARE TODAY ────────────────────────────────────────────────
-function shareToday(){
-  const d=dd(viewDay), wo=W[viewDay];
-  const payload={
-    dow:viewDay,
-    date:new Date().toISOString().slice(0,10),
-    exercises:d.exercises||{},
-    correctives:d.correctives||{},
-    items:d.items||{},
-    protein:d.protein||'',
-    steps:d.steps||'',
-    water:d.water||'',
-    sleep:d.sleep||'',
-    notes:d.notes||'',
-    progress:prog.slice(-5),
-    milestones:miles,
-  };
-  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  const friendUrl=location.href.replace(/[^\/]*$/,'')+('friend.html#'+encoded);
-  const btn=document.getElementById('share-btn');
-  if(navigator.share){
-    navigator.share({title:"Ana's workout today 🌸",url:friendUrl}).catch(()=>{});
-  } else {
-    navigator.clipboard.writeText(friendUrl).then(()=>{
-      if(btn){btn.textContent='Link copied! 🌷';setTimeout(()=>btn.textContent='Share today 🌸',2500);}
-    }).catch(()=>{
-      if(btn){btn.textContent=friendUrl;btn.style.fontSize='10px';}
-    });
-  }
-}
-
 const W = {
   1:{name:'Monday',title:'Lower Body',emoji:'🍑',color:'#e8a0b4',corr:true,sections:[
     {label:'Main Lifts',exercises:[
-      {id:'hip_thrust',name:'Barbell hip thrusts',sets:'4 × 8–10'},
-      {id:'rdl',name:'Romanian deadlifts',sets:'4 × 10'},
-      {id:'bss',name:'Bulgarian split squats',sets:'3 × 10 ea'},
-      {id:'leg_press',name:'Leg press',sets:'3 × 12'},
+      {id:'hip_thrust',name:'Barbell hip thrusts',sets:'4×8–10'},
+      {id:'rdl',name:'Romanian deadlifts',sets:'4×10'},
+      {id:'bss',name:'Bulgarian split squats',sets:'3×10 ea'},
+      {id:'leg_press',name:'Leg press',sets:'3×12'},
     ]},
     {label:'Accessories',exercises:[
-      {id:'kickback',name:'Cable kickbacks',sets:'3 × 15'},
-      {id:'abductor',name:'Hip abductor machine',sets:'3 × 15'},
-      {id:'calves',name:'Calf raises',sets:'3 × 15'},
+      {id:'kickback',name:'Cable kickbacks',sets:'3×15'},
+      {id:'abductor',name:'Hip abductor machine',sets:'3×15'},
+      {id:'calves',name:'Calf raises',sets:'3×15'},
     ]},
     {label:'Finish',exercises:[
       {id:'incline_walk',name:'Incline treadmill walk',sets:'15 min',nw:true},
     ]},
   ]},
-  2:{name:'Tuesday',title:'Pilates + Walk',emoji:'🌿',color:'#88c4a8',corr:true,light:true,items:[
+  2:{name:'Tuesday',title:'Pilates + Walk',emoji:'🌿',color:'#88c4a8',light:true,items:[
     {id:'corr',label:'Posture corrective block',detail:'10 min'},
     {id:'pilates',label:'Pilates session',detail:'45 min'},
     {id:'steps_i',label:'Steps target',detail:'8–10k'},
   ]},
   3:{name:'Wednesday',title:'Upper Body',emoji:'🌸',color:'#a890d0',corr:true,sections:[
     {label:'Back + Shoulders',exercises:[
-      {id:'lat_pull',name:'Lat pulldowns',sets:'4 × 10'},
-      {id:'cable_row',name:'Seated cable rows',sets:'4 × 10'},
-      {id:'face_pull',name:'Face pulls',sets:'3 × 15'},
-      {id:'rear_delt',name:'Rear delt flyes',sets:'3 × 12'},
-      {id:'sh_press',name:'DB shoulder press',sets:'3 × 10'},
+      {id:'lat_pull',name:'Lat pulldowns',sets:'4×10'},
+      {id:'cable_row',name:'Seated cable rows',sets:'4×10'},
+      {id:'face_pull',name:'Face pulls',sets:'3×15'},
+      {id:'rear_delt',name:'Rear delt flyes',sets:'3×12'},
+      {id:'sh_press',name:'DB shoulder press',sets:'3×10'},
     ]},
     {label:'Arms',exercises:[
-      {id:'bicep',name:'Bicep curls',sets:'3 × 12'},
-      {id:'tricep',name:'Tricep pushdowns',sets:'3 × 12'},
+      {id:'bicep',name:'Bicep curls',sets:'3×12'},
+      {id:'tricep',name:'Tricep pushdowns',sets:'3×12'},
     ]},
     {label:'Core',exercises:[
-      {id:'dead_bug',name:'Dead bugs',sets:'3 × 12',nw:true},
-      {id:'cable_crunch',name:'Cable crunches',sets:'3 × 15'},
-      {id:'plank',name:'Plank',sets:'3 × 30–45s',nw:true},
+      {id:'dead_bug',name:'Dead bugs',sets:'3×12',nw:true},
+      {id:'cable_crunch',name:'Cable crunches',sets:'3×15'},
+      {id:'plank',name:'Plank',sets:'3×30–45s',nw:true},
     ]},
   ]},
   4:{name:'Thursday',title:'Active Recovery',emoji:'🌼',color:'#d8b870',light:true,items:[
@@ -296,430 +145,215 @@ const W = {
   ]},
   5:{name:'Friday',title:'Full Body',emoji:'🔥',color:'#e07898',corr:true,sections:[
     {label:'Compound Lifts',exercises:[
-      {id:'deadlift',name:'Deadlifts / Trap bar',sets:'4 × 6–8'},
-      {id:'goblet',name:'Goblet squats',sets:'3 × 12'},
-      {id:'db_bench',name:'DB bench press',sets:'3 × 10'},
-      {id:'db_row',name:'Single-arm DB rows',sets:'3 × 10 ea'},
-      {id:'fri_thr',name:'Hip thrusts',sets:'3 × 12'},
-      {id:'farmer',name:'Farmer carries',sets:'3 × 30m',nw:true},
+      {id:'deadlift',name:'Deadlifts / Trap bar',sets:'4×6–8'},
+      {id:'goblet',name:'Goblet squats',sets:'3×12'},
+      {id:'db_bench',name:'DB bench press',sets:'3×10'},
+      {id:'db_row',name:'Single-arm DB rows',sets:'3×10 ea'},
+      {id:'fri_thr',name:'Hip thrusts',sets:'3×12'},
+      {id:'farmer',name:'Farmer carries',sets:'3×30m',nw:true},
     ]},
   ]},
-  6:{name:'Saturday',title:'Cardio',emoji:'🌷',color:'#78b0d0',light:true,cardioChoice:true,items:[
+  6:{name:'Saturday',title:'Cardio',emoji:'🌷',color:'#78b0d0',light:true,items:[
     {id:'run',label:'Run / jog'},{id:'cycle',label:'Cycling'},
     {id:'rowing',label:'Rowing machine'},{id:'swim',label:'Swimming'},
   ]},
-  0:{name:'Sunday',title:'Rest',emoji:'🐰',color:'#a8c890',rest:true},
+  0:{name:'Sunday',title:'Rest Day',emoji:'🐰',color:'#a8c890',rest:true},
 };
+
 const CORR=[
-  {id:'dh',label:'Dead hangs',detail:'3 × 20–30s'},
-  {id:'fp',label:'Face pulls',detail:'3 × 15'},
-  {id:'bp',label:'Band pull-aparts',detail:'3 × 20'},
-  {id:'wa',label:'Wall angels',detail:'2 × 10'},
+  {id:'dh',label:'Dead hangs',detail:'3×20–30s'},
+  {id:'fp',label:'Face pulls',detail:'3×15'},
+  {id:'bp',label:'Band pull-aparts',detail:'3×20'},
+  {id:'wa',label:'Wall angels',detail:'2×10'},
   {id:'hf',label:'Hip flexor stretch',detail:'60s each'},
-  {id:'ct',label:'Chin tucks',detail:'2 × 10'},
+  {id:'ct',label:'Chin tucks',detail:'2×10'},
 ];
-const MS=[
-  {id:'shoulders',label:'Shoulders no longer rounding'},
-  {id:'head',label:'Head naturally more upright'},
-  {id:'back',label:'Less lower back tension'},
-  {id:'core',label:'Core feels stronger'},
-  {id:'tall',label:'Looking / standing taller'},
-];
-const DORD=[1,2,3,4,5,6,0];
-const DK={0:'sun',1:'mon',2:'tue',3:'wed',4:'thu',5:'fri',6:'sat'};
-const DS={0:'Su',1:'Mo',2:'Tu',3:'We',4:'Th',5:'Fr',6:'Sa'};
-const DF={0:'Rest',1:'Lower\nBody',2:'Pilates',3:'Upper\nBody',4:'Recovery',5:'Full\nBody',6:'Cardio'};
-const TF={today:'🌸',week:'🌷',progress:'🌺'};
 
-let tab='today', selDay=new Date().getDay(), viewDay=new Date().getDay();
-const DOW=new Date().getDay(), WK=getMondayKey();
-let wkData={},prog=[],miles={};
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-function getMondayKey(){const d=new Date(),day=d.getDay();d.setDate(d.getDate()-day+(day===0?-6:1));return d.toISOString().slice(0,10);}
-function loadAll(){
-  try{wkData=JSON.parse(localStorage.getItem('wt_wk_'+WK)||'{}');}catch{wkData={};}
-  try{prog=JSON.parse(localStorage.getItem('wt_prog')||'[]');}catch{prog=[];}
-  try{miles=JSON.parse(localStorage.getItem('wt_ms')||'{}');}catch{miles={};}
-}
-function saveWk(){localStorage.setItem('wt_wk_'+WK,JSON.stringify(wkData));}
-function saveProg(){localStorage.setItem('wt_prog',JSON.stringify(prog));}
-function saveMs(){localStorage.setItem('wt_ms',JSON.stringify(miles));}
-function dd(dow){const k=DK[dow];if(!wkData[k])wkData[k]={};return wkData[k];}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function fmtD(iso){return new Date(iso+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});}
-
-function renderHeader(){
-  const wo=W[viewDay];
-  const isToday=viewDay===DOW;
-  const dayLabel=isToday?'Today':wo.name;
-  const subs={today:`${dayLabel} · ${wo.title}`,week:'Weekly overview',progress:'Weight log & milestones'};
-  const titles={today:'Today',week:'This Week',progress:'Progress'};
-  document.getElementById('header').innerHTML=`
-    <div class="h-title">${titles[tab]}</div>
-    <div class="h-sub">${subs[tab]}</div>`;
+// ── DECODE DATA FROM URL ───────────────────────────────────────
+function getData(){
+  const hash=location.hash.slice(1);
+  if(!hash)return null;
+  try{ return JSON.parse(decodeURIComponent(escape(atob(hash)))); }
+  catch(e){ return null; }
 }
 
-function renderNav(){
-  const tabs=[{id:'today',icon:'📋',label:'Today'},{id:'week',icon:'📅',label:'Week'},{id:'progress',icon:'📈',label:'Progress'}];
-  document.getElementById('nav').innerHTML=tabs.map(t=>
-    `<button class="nav-btn ${tab===t.id?'active':''}" data-tab="${t.id}">
-      <span class="nav-icon">${t.icon}</span>
-      <span class="nav-label">${t.label}</span>
-      <div class="nav-dot"></div>
-    </button>`).join('');
-}
+// ── RENDER ─────────────────────────────────────────────────────
+function render(data){
+  const wo=W[data.dow];
+  const dateStr=new Date(data.date+'T12:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('page-sub').textContent=dateStr;
 
-function corrCard(d){
-  const allDone=CORR.every(c=>d.correctives?.[c.id]);
-  return `<div class="sec-label">Posture Correctives</div>
-  <div class="card" id="corr-card" style="border-left:4px solid ${allDone?'var(--accent)':'var(--line)'}">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <div style="font-size:14px;font-weight:700;">Corrective Block 🌸</div>
-      <span class="tag ${allDone?'done':''}" id="corr-tag">${allDone?'Done ✓':'Start here'}</span>
-    </div>
-    ${CORR.map(c=>`<div class="ex-row">
-      <div class="cb ${d.correctives?.[c.id]?'checked':''}" data-corrid="${c.id}"><span class="cb-icon">✓</span></div>
-      <div class="ex-info"><div class="ex-name">${esc(c.label)}</div></div>
-      <div class="ex-sets">${esc(c.detail)}</div>
-    </div>`).join('')}
-  </div>`;
-}
+  const allEx=wo.sections?wo.sections.flatMap(s=>s.exercises):(wo.items||[]);
+  let doneCount=0, total=allEx.length;
+  if(wo.sections) doneCount=wo.sections.flatMap(s=>s.exercises).filter(e=>data.exercises?.[e.id]?.done).length;
+  else if(wo.items) doneCount=(wo.items||[]).filter(i=>data.items?.[i.id]).length;
+  const pct=total?Math.round(doneCount/total*100):0;
 
-function updateProgBar(){
-  const wo=W[viewDay]; if(!wo.sections)return;
-  const d=dd(viewDay), allEx=wo.sections.flatMap(s=>s.exercises);
-  const done=allEx.filter(e=>d.exercises?.[e.id]?.done).length;
-  const pct=Math.round(done/allEx.length*100);
-  const f=document.getElementById('pfill'); if(f)f.style.width=pct+'%';
-  const l=document.getElementById('plbl'); if(l)l.textContent=`${done}/${allEx.length} done`;
-  const p=document.getElementById('ppct'); if(p)p.textContent=pct+'%';
-}
+  let h='';
 
-function renderToday(){
-  const wo=W[viewDay],d=dd(viewDay);
-  const allEx=wo.sections?wo.sections.flatMap(s=>s.exercises):[];
-  const doneEx=allEx.filter(e=>d.exercises?.[e.id]?.done).length;
-  const pct=allEx.length?Math.round(doneEx/allEx.length*100):0;
-
-  // Day navigator — clean arrow style
-  const prevDay=DORD[(DORD.indexOf(viewDay)+6)%7];
-  const nextDay=DORD[(DORD.indexOf(viewDay)+1)%7];
-  const isToday=viewDay===DOW;
-
-  let h=`<div class="day-nav-row">
-    <button class="day-nav-arr" data-daynav="${prevDay}">‹</button>
-    <div class="day-nav-center">
-      <div class="day-nav-name">${wo.name}${isToday?'<span class="day-nav-badge">Today</span>':''}</div>
-    </div>
-    <button class="day-nav-arr" data-daynav="${nextDay}">›</button>
-  </div>
-  <div class="day-dots">
-    ${DORD.map(d=>`<div class="day-dot ${d===viewDay?'active':''}"></div>`).join('')}
-  </div>`;
-
-  h+=`<div class="card card-hero" style="background:${wo.color};">
-    <div class="emoji-bg">${wo.emoji}</div>
+  // Hero card
+  h+=`<div class="card-hero" style="background:${wo.color};">
+    <div class="hero-emoji">${wo.emoji}</div>
     <div class="hero-deco">✿ ❀ ✿</div>
     <div class="hero-day">${wo.name}</div>
     <div class="hero-title">${wo.title}</div>
-    ${allEx.length?`<div class="prog-wrap">
-      <div class="prog-labels"><span id="plbl">${doneEx}/${allEx.length} done</span><span id="ppct">${pct}%</span></div>
-      <div class="prog-track"><div class="prog-fill" id="pfill" style="width:${pct}%"></div></div>
+    <div class="hero-date">${dateStr}</div>
+    ${total?`<div class="prog-wrap">
+      <div class="prog-labels"><span>${doneCount}/${total} done</span><span>${pct}%</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
     </div>`:''}
   </div>
-  <div class="flower-strip">🌸 🌷 🌼 🌸 🌷 🌼</div>
-  <button id="share-btn" onclick="shareToday()" style="-webkit-appearance:none;appearance:none;width:100%;border:none;border-radius:14px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:700;padding:11px;cursor:pointer;margin-bottom:4px;letter-spacing:0.3px;font-family:inherit;">Share today 🌸</button>`;
+  <div class="flower-strip">🌸 🌷 🌼 🌸 🌷 🌼</div>`;
 
+  // Exercises
   if(wo.rest){
-    h+=`<div class="card rest-card"><span class="rest-emoji">🐰</span>
-    <div class="rest-title">Rest Day 🌸</div>
-    <div class="rest-text">Recovery is where the magic happens.<br>Eat well, sleep well, bloom tomorrow.</div></div>`;
-  } else if(wo.light){
-    if(wo.corr)h+=corrCard(d);
-    h+=`<div class="sec-label">${wo.cardioChoice?'Choose One':"Today's Plan"}</div><div class="card">`;
-    h+=(wo.items||[]).map(item=>`<div class="ex-row">
-      <div class="cb ${d.items?.[item.id]?'checked':''}" data-light="${item.id}"><span class="cb-icon">✓</span></div>
-      <div class="ex-info"><div class="ex-name">${esc(item.label)}</div></div>
-      ${item.detail?`<div class="ex-sets">${esc(item.detail)}</div>`:''}
-    </div>`).join('');
-    h+=`</div>`;
-    if(wo.cardioChoice){
-      h+=`<div class="sec-label">Duration</div><div class="card"><div class="ex-row" style="border:none">
-        <div class="ex-info"><div class="ex-name">Time (min)</div></div>
-        <input class="w-input" style="width:80px" placeholder="min" value="${esc(d.duration||'')}" data-hf="duration">
-      </div></div>`;
-    }
+    h+=`<div class="card" style="text-align:center;padding:32px 20px;">
+      <div style="font-size:44px;margin-bottom:10px;">🐰</div>
+      <div style="font-family:Georgia,serif;font-size:17px;font-weight:700;margin-bottom:6px;">Rest Day</div>
+      <div style="font-size:13px;color:var(--soft);">Recovery is part of the work 🌸</div>
+    </div>`;
   } else if(wo.sections){
-    if(wo.corr)h+=corrCard(d);
+    if(wo.corr){
+      const corrDone=CORR.filter(c=>data.correctives?.[c.id]).length;
+      const allCorrDone=corrDone===CORR.length;
+      h+=`<div class="sec-label">Posture Correctives</div><div class="card" style="border-left:4px solid ${allCorrDone?'var(--accent)':'var(--line)'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:14px;font-weight:700;">Corrective block 🌸</div>
+          <div style="font-size:12px;font-weight:700;color:${allCorrDone?'var(--accent)':'var(--soft)'};">${corrDone}/${CORR.length}</div>
+        </div>
+        ${CORR.map(c=>{const done=!!data.correctives?.[c.id];return`<div class="ex-row">
+          <div class="ex-tick ${done?'done':'todo'}">${done?'✓':''}</div>
+          <div class="ex-name ${done?'done':'todo'}">${esc(c.label)}</div>
+          <div class="ex-sets">${esc(c.detail)}</div>
+        </div>`;}).join('')}
+      </div>`;
+    }
     wo.sections.forEach(sec=>{
       h+=`<div class="sec-label">${esc(sec.label)}</div><div class="card">`;
-      h+=sec.exercises.map(ex=>`<div class="ex-row">
-        <div class="cb ${d.exercises?.[ex.id]?.done?'checked':''}" data-exid="${ex.id}"><span class="cb-icon">✓</span></div>
-        <div class="ex-info"><div class="ex-name">${esc(ex.name)}</div><div class="ex-sets">${esc(ex.sets)}</div></div>
-        ${!ex.nw?`<div><input class="w-input" placeholder="kg" value="${esc(d.exercises?.[ex.id]?.weight||'')}" data-wid="${ex.id}"><div class="w-label">kg</div></div>`:''}
-      </div>`).join('');
+      h+=sec.exercises.map(ex=>{
+        const done=!!data.exercises?.[ex.id]?.done;
+        const wt=data.exercises?.[ex.id]?.weight;
+        return`<div class="ex-row">
+          <div class="ex-tick ${done?'done':'todo'}">${done?'✓':''}</div>
+          <div class="ex-name ${done?'done':'todo'}">${esc(ex.name)}</div>
+          ${wt?`<div class="ex-weight">${esc(wt)} kg</div>`:`<div class="ex-sets">${esc(ex.sets)}</div>`}
+        </div>`;
+      }).join('');
       h+=`</div>`;
     });
+  } else if(wo.light){
+    h+=`<div class="sec-label">Today's Plan</div><div class="card">`;
+    h+=(wo.items||[]).map(item=>{
+      const done=!!data.items?.[item.id];
+      return`<div class="ex-row">
+        <div class="ex-tick ${done?'done':'todo'}">${done?'✓':''}</div>
+        <div class="ex-name ${done?'done':'todo'}">${esc(item.label)}</div>
+        ${item.detail?`<div class="ex-sets">${esc(item.detail)}</div>`:''}
+      </div>`;
+    }).join('');
+    h+=`</div>`;
   }
 
+  // Habits
   if(!wo.rest){
-    h+=`<div class="sec-label">Habits</div>
-    <div class="hgrid">
-      <div class="hbox"><span class="hbox-label">Protein (g)</span><input class="h-input" placeholder="120" value="${esc(d.protein||'')}" data-hf="protein"></div>
-      <div class="hbox"><span class="hbox-label">Steps</span><input class="h-input" placeholder="8000" value="${esc(d.steps||'')}" data-hf="steps"></div>
-      <div class="hbox"><span class="hbox-label">Water (L)</span><input class="h-input" placeholder="2.0" value="${esc(d.water||'')}" data-hf="water"></div>
-      <div class="hbox"><span class="hbox-label">Sleep (h)</span><input class="h-input" placeholder="8" value="${esc(d.sleep||'')}" data-hf="sleep"></div>
-    </div>
-    <div class="sec-label">Notes</div>
-    <div class="card"><textarea class="notes-area" placeholder="How did it feel? 🌷 Any PRs?" data-hf="notes">${esc(d.notes||'')}</textarea></div>`;
-  }
-
-  document.getElementById('content').innerHTML=h;
-  document.querySelectorAll('[data-hf]').forEach(el=>el.addEventListener('input',()=>{dd(viewDay)[el.dataset.hf]=el.value;saveWk();}));
-  document.querySelectorAll('[data-wid]').forEach(el=>el.addEventListener('input',()=>{
-    const d2=dd(viewDay); if(!d2.exercises)d2.exercises={};
-    if(!d2.exercises[el.dataset.wid])d2.exercises[el.dataset.wid]={};
-    d2.exercises[el.dataset.wid].weight=el.value; saveWk();
-  }));
-}
-
-function renderWeek(){
-  const wi=wkData.weighIn||{};
-  const change=(wi.current&&wi.previous)?(parseFloat(wi.current)-parseFloat(wi.previous)).toFixed(1):null;
-
-  let h=`<div class="week-strip">`;
-  DORD.forEach(dow=>{
-    const k=DK[dow],dd2=wkData[k]||{};
-    const has=dd2.exercises||dd2.items||dd2.correctives||dd2.protein;
-    const isT=DOW===dow,isSel=selDay===dow,wo=W[dow];
-    h+=`<div class="day-pill" data-daypill="${dow}">
-      <div class="dp-label ${isT?'today':''} ${isSel?'sel':''}">${DS[dow]}</div>
-      <div class="dp-circle ${isT?'today':''} ${isSel?'sel':''}" style="${has?'background:'+wo.color+'30':''}">${wo.emoji}</div>
-      <div class="dp-focus">${DF[dow]}</div>
-    </div>`;
-  });
-  h+=`</div>`;
-
-  // Selected day detail card
-  const swo=W[selDay],sd=wkData[DK[selDay]]||{};
-  const sEx=swo.sections?swo.sections.flatMap(s=>s.exercises):[];
-  const sDone=sEx.filter(e=>sd.exercises?.[e.id]?.done).length;
-  const sPct=sEx.length?Math.round(sDone/sEx.length*100):0;
-  h+=`<div class="day-detail">
-    <div class="dd-title">${swo.emoji} ${swo.name} — ${swo.title}</div>`;
-  if(!swo.rest){
-    if(sEx.length>0){
-      h+=`<div class="dd-comp">
-        <div class="dd-bar-track"><div class="dd-bar-fill" style="width:${sPct}%"></div></div>
-        <div class="dd-pct">${sDone}/${sEx.length} exercises</div>
-      </div>`;
-    } else if(swo.light){
-      const di=(swo.items||[]).filter(i=>sd.items?.[i.id]).length;
-      const ti=(swo.items||[]).length;
-      h+=`<div class="dd-comp">
-        <div class="dd-bar-track"><div class="dd-bar-fill" style="width:${ti?Math.round(di/ti*100):0}%"></div></div>
-        <div class="dd-pct">${di}/${ti} done</div>
-      </div>`;
-    }
-    h+=`<div class="dd-habits">`;
-    [{key:'protein',lbl:'Protein',unit:'g'},{key:'steps',lbl:'Steps',unit:''},{key:'water',lbl:'Water',unit:'L'},{key:'sleep',lbl:'Sleep',unit:'h'}].forEach(hb=>{
-      const val=sd[hb.key];
-      h+=`<div class="dd-hab"><div class="dd-hab-lbl">${hb.lbl}</div>
-        <div class="dd-hab-val ${val?'':'empty'}">${val?val+(hb.unit||''):'—'}</div></div>`;
+    const habits=[
+      {key:'protein',lbl:'Protein',unit:'g',target:120},
+      {key:'steps',lbl:'Steps',unit:'',target:8000},
+      {key:'water',lbl:'Water',unit:'L',target:2},
+      {key:'sleep',lbl:'Sleep',unit:'h',target:7},
+    ];
+    h+=`<div class="sec-label">Today's Habits</div><div class="hab-grid">`;
+    habits.forEach(hb=>{
+      const val=data[hb.key];
+      const num=parseFloat(val);
+      const met=!isNaN(num)&&num>=hb.target;
+      if(val){
+        h+=`<div class="hab-box ${met?'hab-met':'hab-miss'}">
+          <span class="hab-lbl">${hb.lbl}</span>
+          <div class="hab-val">${esc(val)}<span class="hab-unit">${hb.unit}</span></div>
+          <div class="hab-note">${met?'✓ target hit':'target: '+hb.target+hb.unit}</div>
+        </div>`;
+      } else {
+        h+=`<div class="hab-box hab-miss">
+          <span class="hab-lbl">${hb.lbl}</span>
+          <div class="hab-val" style="color:var(--line);">—</div>
+          <div class="hab-note">target: ${hb.target}${hb.unit}</div>
+        </div>`;
+      }
     });
     h+=`</div>`;
-  } else {
-    h+=`<div style="font-size:13px;color:var(--soft);font-style:italic;">Rest & recover 🐰</div>`;
-  }
-  h+=`</div>`;
 
-  h+=`<div class="sec-label">Weekly Weigh-in</div><div class="card">
-    <div class="weigh-row">
-      <div class="weigh-col" style="padding-left:0">
-        <div class="weigh-col-label">This week (kg)</div>
-        <input class="weigh-input" placeholder="—" value="${esc(wi.current||'')}" data-wi="current">
+    // Notes
+    if(data.notes){
+      h+=`<div class="sec-label">Ana's notes</div>
+      <div class="notes-box">${esc(data.notes)}</div>`;
+    }
+  }
+
+  // Weight progress
+  const prog=(data.progress||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  if(prog.length>=2){
+    const start=prog[0].weight, latest=prog[prog.length-1].weight;
+    const change=(latest-start).toFixed(1);
+    h+=`<div class="sec-label">Weight Progress</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-lbl">Start</div><div class="stat-val">${start}</div><div class="stat-unit">kg</div></div>
+      <div class="stat-box"><div class="stat-lbl">Now</div><div class="stat-val">${latest}</div><div class="stat-unit">kg</div></div>
+      <div class="stat-box"><div class="stat-lbl">Change</div>
+        <div class="stat-val" style="color:${parseFloat(change)<=0?'#6aab7e':'#e87898'}">${parseFloat(change)>0?'+':''}${change}</div>
+        <div class="stat-unit">kg</div>
       </div>
-      <div class="vdiv"></div>
-      <div class="weigh-col">
-        <div class="weigh-col-label">Last week (kg)</div>
-        <input class="weigh-input" placeholder="—" value="${esc(wi.previous||'')}" data-wi="previous">
-      </div>
-      ${change!==null?`<div class="vdiv"></div>
-      <div class="weigh-col">
-        <div class="weigh-col-label">Change</div>
-        <div class="weigh-big" id="wi-change" style="color:${parseFloat(change)<=0?'#6aab7e':'#e87898'}">${parseFloat(change)>0?'+':''}${change}</div>
-      </div>`:''}
-    </div>
-    <div style="font-size:11px;color:var(--soft);margin-top:10px;">🌷 Weigh Monday morning, before eating.</div>
+    </div>`;
+  }
+
+  // Cheer box
+  h+=`<div class="sec-label">Leave a cheer 🌷</div>
+  <div class="card">
+    <div class="cheer-intro">Send Ana some encouragement! Write your message below, copy it, then paste it in WhatsApp or iMessage.</div>
+    <span class="cheer-lbl">Your name</span>
+    <input class="cheer-input" id="cheer-name" placeholder="e.g. Yomi" maxlength="30">
+    <textarea class="cheer-textarea" id="cheer-msg" placeholder="Write something lovely... 🌸" maxlength="300"></textarea>
+    <button class="cheer-btn" onclick="copyCheer()">Copy cheer to send 🌸</button>
+    <div class="cheer-hint">Then paste it in WhatsApp or iMessage to Ana!</div>
+    <div class="copied-msg" id="copied-msg">Copied! Now go send it 🌷</div>
   </div>`;
 
-  const habits=[{key:'protein',label:'Protein',target:120},{key:'steps',label:'Steps',target:8000},{key:'water',label:'Water',target:2},{key:'sleep',label:'Sleep',target:7}];
-  h+=`<div class="sec-label">Habit Summary</div><div class="card"><table class="htable"><thead><tr><th></th>
-    ${DORD.map(d=>`<th class="dth" style="${DOW===d?'color:var(--accent);font-weight:800':''}">${DS[d]}</th>`).join('')}
-  </tr></thead><tbody>`;
-  habits.forEach(hb=>{
-    h+=`<tr><td style="color:var(--soft);font-size:12px;font-weight:600;padding:4px 8px 4px 0;">${hb.label}</td>`;
-    DORD.forEach(dow=>{
-      const val=parseFloat(wkData[DK[dow]]?.[hb.key]);
-      const met=!isNaN(val)&&val>=hb.target,logged=!isNaN(val);
-      const cls=logged?(met?'met':'logged'):'empty';
-      h+=`<td class="dtd"><div class="hdot ${cls}">${logged?(met?'✓':'!'):'·'}</div></td>`;
-    });
-    h+=`</tr>`;
-  });
-  h+=`</tbody></table></div>`;
   document.getElementById('content').innerHTML=h;
-
-  document.querySelectorAll('[data-wi]').forEach(el=>el.addEventListener('input',()=>{
-    if(!wkData.weighIn)wkData.weighIn={};
-    wkData.weighIn[el.dataset.wi]=el.value; saveWk();
-    const wi2=wkData.weighIn;
-    if(wi2.current&&wi2.previous){
-      const ch=(parseFloat(wi2.current)-parseFloat(wi2.previous)).toFixed(1);
-      const chEl=document.getElementById('wi-change');
-      if(chEl){chEl.textContent=(parseFloat(ch)>0?'+':'')+ch;chEl.style.color=parseFloat(ch)<=0?'#6aab7e':'#e87898';}
-      else renderWeek();
-    }
-  }));
 }
 
-function renderProgress(){
-  const sorted=[...prog].sort((a,b)=>a.date.localeCompare(b.date));
-  const start=sorted[0]?.weight,latest=sorted[sorted.length-1]?.weight;
-  const tc=start&&latest&&sorted.length>=2?(latest-start).toFixed(1):null;
-  let h='';
-  if(sorted.length>=2){
-    h+=`<div class="stat-row">
-      <div class="stat-box"><div class="stat-label">Start</div><div class="stat-val">${start}</div><div class="stat-unit">kg</div></div>
-      <div class="stat-box"><div class="stat-label">Now</div><div class="stat-val">${latest}</div><div class="stat-unit">kg</div></div>
-      <div class="stat-box"><div class="stat-label">Change</div>
-        <div class="stat-val" style="color:${parseFloat(tc)<=0?'#6aab7e':'#e87898'}">${parseFloat(tc)>0?'+':''}${tc}</div>
-        <div class="stat-unit">kg</div></div>
-    </div>`;
-  }
-  h+=`<div class="sec-label">Weight Log 🌸</div><div class="card">`;
-  if(!sorted.length)h+=`<div class="empty">No entries yet 🌷<br>Add your first weigh-in below</div>`;
-  sorted.forEach((entry,i)=>{
-    const prev=sorted[i-1];
-    const diff=prev?(entry.weight-prev.weight).toFixed(1):null;
-    const origIdx=prog.findIndex(p=>p.date===entry.date&&p.weight===entry.weight);
-    h+=`<div class="log-row">
-      <div class="log-date">${fmtD(entry.date)}</div>
-      ${diff!==null?`<div class="log-diff" style="color:${parseFloat(diff)<=0?'#6aab7e':'#e87898'}">${parseFloat(diff)>0?'+':''}${diff}</div>`:''}
-      <div class="log-wt">${entry.weight}</div>
-      <div class="log-del" data-del="${origIdx}">✕</div>
-    </div>`;
+function copyCheer(){
+  const name=document.getElementById('cheer-name')?.value?.trim()||'Your friend';
+  const msg=document.getElementById('cheer-msg')?.value?.trim();
+  if(!msg){document.getElementById('cheer-msg')?.focus();return;}
+  const text=`${name}: ${msg} 🌸`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const el=document.getElementById('copied-msg');
+    if(el){el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);}
+  }).catch(()=>{
+    // Fallback for browsers without clipboard API
+    const ta=document.createElement('textarea');
+    ta.value=text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    const el=document.getElementById('copied-msg');
+    if(el){el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);}
   });
-  h+=`<div class="add-form">
-    <input class="add-input" type="date" id="nd" value="${new Date().toISOString().slice(0,10)}" style="width:115px;font-size:13px;">
-    <input class="add-input" type="number" step="0.1" placeholder="kg" id="nw" style="width:65px;text-align:center;">
-    <button class="add-btn" id="add-btn">+ Add</button>
-  </div></div>`;
-  h+=`<div class="sec-label">Posture Milestones 🌷</div><div class="card">`;
-  h+=MS.map(m=>`<div class="ex-row">
-    <div class="cb ${miles[m.id]?'checked':''}" data-msid="${m.id}"><span class="cb-icon">✓</span></div>
-    <div class="ex-info">
-      <div class="ex-name">${esc(m.label)}</div>
-      ${miles[m.id]?`<div class="ms-date">🌸 ${esc(miles[m.id])}</div>`:''}
-    </div>
-  </div>`).join('');
-  h+=`</div>`;
-  document.getElementById('content').innerHTML=h;
-
-  document.getElementById('add-btn')?.addEventListener('click',()=>{
-    const w=parseFloat(document.getElementById('nw')?.value);
-    const dt=document.getElementById('nd')?.value;
-    if(!w||!dt)return;
-    prog.push({date:dt,weight:w}); saveProg();
-    document.getElementById('nw').value=''; renderProgress();
-  });
-  document.querySelectorAll('[data-del]').forEach(el=>el.addEventListener('click',()=>{
-    prog.splice(parseInt(el.dataset.del),1); saveProg(); renderProgress();
-  }));
 }
 
-// ── CONTENT EVENTS ─────────────────────────────────────────────
-document.getElementById('content').addEventListener('click',e=>{
-  // Day nav (today tab)
-  const navEl=e.target.closest('[data-daynav]');
-  if(navEl){viewDay=parseInt(navEl.dataset.daynav);renderHeader();renderToday();return;}
-
-  const cEl=e.target.closest('[data-corrid]');
-  if(cEl){
-    const d2=dd(viewDay); if(!d2.correctives)d2.correctives={};
-    d2.correctives[cEl.dataset.corrid]=!d2.correctives[cEl.dataset.corrid]; saveWk();
-    cEl.classList.toggle('checked',!!d2.correctives[cEl.dataset.corrid]);
-    const allDone=CORR.every(c=>d2.correctives?.[c.id]);
-    const t=document.getElementById('corr-tag');
-    if(t){t.textContent=allDone?'Done ✓':'Start here';t.classList.toggle('done',allDone);}
-    const cc=document.getElementById('corr-card');
-    if(cc)cc.style.borderLeftColor=allDone?'var(--accent)':'var(--line)';
-    return;
-  }
-  const xEl=e.target.closest('[data-exid]');
-  if(xEl){
-    const d2=dd(viewDay); if(!d2.exercises)d2.exercises={};
-    const id=xEl.dataset.exid; if(!d2.exercises[id])d2.exercises[id]={};
-    d2.exercises[id].done=!d2.exercises[id].done; saveWk();
-    xEl.classList.toggle('checked',!!d2.exercises[id].done); updateProgBar(); return;
-  }
-  const lEl=e.target.closest('[data-light]');
-  if(lEl){
-    const d2=dd(viewDay); if(!d2.items)d2.items={};
-    d2.items[lEl.dataset.light]=!d2.items[lEl.dataset.light]; saveWk();
-    lEl.classList.toggle('checked',!!d2.items[lEl.dataset.light]); return;
-  }
-  const mEl=e.target.closest('[data-msid]');
-  if(mEl){
-    const id=mEl.dataset.msid;
-    miles[id]=miles[id]?null:new Date().toLocaleDateString('en-AU',{day:'numeric',month:'short'}); saveMs();
-    mEl.classList.toggle('checked',!!miles[id]);
-    const info=mEl.parentElement.querySelector('.ex-info');
-    let dateEl=info?.querySelector('.ms-date');
-    if(miles[id]){if(!dateEl){dateEl=document.createElement('div');dateEl.className='ms-date';info?.appendChild(dateEl);}dateEl.textContent='🌸 '+miles[id];}
-    else dateEl?.remove(); return;
-  }
-  const dpEl=e.target.closest('[data-daypill]');
-  if(dpEl){selDay=parseInt(dpEl.dataset.daypill);renderWeek();}
-});
-
-// ── NAV EVENTS (separate listener — this was the bug!) ─────────
-document.getElementById('nav').addEventListener('click',e=>{
-  const btn=e.target.closest('[data-tab]');
-  if(btn){tab=btn.dataset.tab;renderAll();}
-});
-
-// ── PIN LOGIC ──────────────────────────────────────────────────
-const PIN='4444';
-let pinEntry='';
-function updatePinDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i)?.classList.toggle('filled',i<pinEntry.length);}
-function pinShake(){const d=document.getElementById('pin-dots');if(d){d.classList.add('shake');setTimeout(()=>d.classList.remove('shake'),400);}}
-function unlockApp(){
-  document.getElementById('pin-screen')?.classList.add('hidden');
-  sessionStorage.setItem('wt_unlocked','1');
-  loadAll(); renderAll();
+function renderNoData(){
+  document.getElementById('page-sub').textContent='Ask Ana to share today\'s link!';
+  document.getElementById('content').innerHTML=`<div class="no-data">
+    <span class="no-data-emoji">🐰</span>
+    <div class="no-data-title">No data here yet!</div>
+    <div class="no-data-text">Ask Ana to tap <strong>"Share today 🌸"</strong> in her app<br>and send you the link.<br><br>Each day she shares a fresh link<br>so you can see how she's going 🌷</div>
+  </div>`;
 }
 
-document.getElementById('pin-screen').addEventListener('click',e=>{
-  const key=e.target.closest('[data-k]');
-  if(key&&pinEntry.length<4){
-    pinEntry+=key.dataset.k; updatePinDots();
-    if(pinEntry.length===4){
-      if(pinEntry===PIN){setTimeout(unlockApp,150);}
-      else{
-        pinShake();
-        const err=document.getElementById('pin-error'); if(err)err.classList.add('show');
-        setTimeout(()=>{pinEntry='';updatePinDots();if(err)err.classList.remove('show');},900);
-      }
-    }
-  }
-  if(e.target.id==='pin-del'){pinEntry=pinEntry.slice(0,-1);updatePinDots();}
-});
-
-// ── RENDER + INIT ──────────────────────────────────────────────
-function renderAll(){renderHeader();renderNav();({today:renderToday,week:renderWeek,progress:renderProgress})[tab]?.();document.getElementById('content').scrollTop=0;}
-
-if(sessionStorage.getItem('wt_unlocked')){loadAll();renderAll();}
+// ── INIT ───────────────────────────────────────────────────────
+const data=getData();
+if(data) render(data);
+else renderNoData();
 </script>
 </body>
 </html>
